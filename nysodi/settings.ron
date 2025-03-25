@@ -1,0 +1,819 @@
+(
+    selection: (
+        ignore_back_faces: false,
+        track_selection: true,
+    ),
+    graphics: (
+        quality: (
+            point_shadow_map_size: 1024,
+            point_soft_shadows: true,
+            point_shadows_enabled: true,
+            point_shadows_distance: 15.0,
+            point_shadow_map_precision: Full,
+            point_shadows_fade_out_range: 1.0,
+            spot_shadow_map_size: 1024,
+            spot_soft_shadows: true,
+            spot_shadows_enabled: true,
+            spot_shadows_distance: 15.0,
+            spot_shadow_map_precision: Full,
+            spot_shadows_fade_out_range: 1.0,
+            csm_settings: (
+                enabled: true,
+                size: 2048,
+                precision: Full,
+                pcf: true,
+            ),
+            use_ssao: true,
+            ssao_radius: 0.5,
+            light_scatter_enabled: true,
+            fxaa: true,
+            use_parallax_mapping: true,
+            use_bloom: true,
+            use_occlusion_culling: false,
+            use_light_occlusion_culling: false,
+        ),
+        z_near: 0.025,
+        z_far: 128.0,
+        draw_grid: true,
+    ),
+    build: (
+        selected_profile: 0,
+        profiles: [
+            (
+                name: "Debug",
+                build_commands: [
+                    (
+                        command: "cargo",
+                        args: [
+                            "build",
+                            "--package",
+                            "executor",
+                        ],
+                        environment_variables: [],
+                    ),
+                ],
+                run_command: (
+                    command: "cargo",
+                    args: [
+                        "run",
+                        "--package",
+                        "executor",
+                    ],
+                    environment_variables: [],
+                ),
+            ),
+            (
+                name: "Debug (HR)",
+                build_commands: [
+                    (
+                        command: "cargo",
+                        args: [
+                            "build",
+                            "--package",
+                            "game_dylib",
+                            "--no-default-features",
+                            "--features",
+                            "dylib-engine",
+                            "--profile",
+                            "dev-hot-reload",
+                        ],
+                        environment_variables: [
+                            (
+                                name: "RUSTFLAGS",
+                                value: "-C prefer-dynamic=yes",
+                            ),
+                        ],
+                    ),
+                    (
+                        command: "cargo",
+                        args: [
+                            "build",
+                            "--package",
+                            "executor",
+                            "--no-default-features",
+                            "--features",
+                            "dylib",
+                            "--profile",
+                            "dev-hot-reload",
+                        ],
+                        environment_variables: [
+                            (
+                                name: "RUSTFLAGS",
+                                value: "-C prefer-dynamic=yes",
+                            ),
+                        ],
+                    ),
+                ],
+                run_command: (
+                    command: "cargo",
+                    args: [
+                        "run",
+                        "--package",
+                        "executor",
+                        "--no-default-features",
+                        "--features",
+                        "dylib",
+                        "--profile",
+                        "dev-hot-reload",
+                    ],
+                    environment_variables: [
+                        (
+                            name: "RUSTFLAGS",
+                            value: "-C prefer-dynamic=yes",
+                        ),
+                    ],
+                ),
+            ),
+            (
+                name: "Release",
+                build_commands: [
+                    (
+                        command: "cargo",
+                        args: [
+                            "build",
+                            "--package",
+                            "executor",
+                            "--release",
+                        ],
+                        environment_variables: [],
+                    ),
+                ],
+                run_command: (
+                    command: "cargo",
+                    args: [
+                        "run",
+                        "--package",
+                        "executor",
+                        "--release",
+                    ],
+                    environment_variables: [],
+                ),
+            ),
+            (
+                name: "Release (HR)",
+                build_commands: [
+                    (
+                        command: "cargo",
+                        args: [
+                            "build",
+                            "--package",
+                            "executor",
+                            "--release",
+                            "--release",
+                        ],
+                        environment_variables: [],
+                    ),
+                ],
+                run_command: (
+                    command: "cargo",
+                    args: [
+                        "run",
+                        "--package",
+                        "executor",
+                        "--release",
+                        "--release",
+                    ],
+                    environment_variables: [],
+                ),
+            ),
+        ],
+    ),
+    general: (
+        show_node_removal_dialog: true,
+        suspend_unfocused_editor: true,
+        script_editor: SystemDefault,
+        max_history_entries: 512,
+        generate_previews: true,
+        max_log_entries: 256,
+        style: Dark,
+    ),
+    debugging: (
+        show_physics: true,
+        show_bounds: true,
+        show_tbn: false,
+        show_terrains: false,
+        show_light_bounds: true,
+        show_camera_bounds: true,
+        pictogram_size: 0.33,
+        save_scene_in_text_form: false,
+    ),
+    move_mode_settings: (
+        grid_snapping: false,
+        x_snap_step: 0.05,
+        y_snap_step: 0.05,
+        z_snap_step: 0.05,
+    ),
+    rotate_mode_settings: (
+        angle_snapping: false,
+        x_snap_step: 2.5,
+        y_snap_step: 2.5,
+        z_snap_step: 2.5,
+    ),
+    model: (
+        instantiation_scale: (1.0, 1.0, 1.0),
+    ),
+    camera: (
+        speed: 10.0,
+        zoom_speed: 0.5,
+        zoom_range: (
+            start: 0.0,
+            end: 100.0,
+        ),
+    ),
+    navmesh: (
+        draw_all: true,
+        vertex_radius: 0.2,
+    ),
+    key_bindings: (
+        move_forward: Some(KeyW),
+        move_back: Some(KeyS),
+        move_left: Some(KeyA),
+        move_right: Some(KeyD),
+        move_up: Some(KeyE),
+        move_down: Some(KeyQ),
+        speed_up: Some(ControlLeft),
+        slow_down: Some(ShiftLeft),
+        undo: Some(
+            code: KeyZ,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        redo: Some(
+            code: KeyY,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        enable_select_mode: Some(
+            code: Digit1,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        enable_move_mode: Some(
+            code: Digit2,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        enable_rotate_mode: Some(
+            code: Digit3,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        enable_scale_mode: Some(
+            code: Digit4,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        enable_navmesh_mode: Some(
+            code: Digit5,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        enable_terrain_mode: Some(
+            code: Digit6,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        save_scene: Some(
+            code: KeyS,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        save_scene_as: Some(
+            code: KeyS,
+            modifiers: (
+                alt: false,
+                shift: true,
+                control: true,
+                system: false,
+            ),
+        ),
+        save_all_scenes: Some(
+            code: KeyS,
+            modifiers: (
+                alt: true,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        load_scene: Some(
+            code: KeyL,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        copy_selection: Some(
+            code: KeyC,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        paste: Some(
+            code: KeyV,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        new_scene: Some(
+            code: KeyN,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        close_scene: Some(
+            code: KeyQ,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: true,
+                system: false,
+            ),
+        ),
+        remove_selection: Some(
+            code: Delete,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        focus: Some(
+            code: KeyF,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+        terrain_key_bindings: (
+            modify_height_map_mode: Some(
+                code: F1,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            draw_on_mask_mode: Some(
+                code: F2,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            flatten_slopes_mode: Some(
+                code: F3,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            increase_brush_size: Some(
+                code: BracketRight,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            decrease_brush_size: Some(
+                code: BracketLeft,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            increase_brush_opacity: Some(
+                code: Period,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            decrease_brush_opacity: Some(
+                code: Comma,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            prev_layer: Some(
+                code: Semicolon,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+            next_layer: Some(
+                code: Quote,
+                modifiers: (
+                    alt: false,
+                    shift: false,
+                    control: false,
+                    system: false,
+                ),
+            ),
+        ),
+        run_game: Some(
+            code: F5,
+            modifiers: (
+                alt: false,
+                shift: false,
+                control: false,
+                system: false,
+            ),
+        ),
+    ),
+    scene_settings: {
+        "./data/scene.rgs": (
+            camera_settings: (
+                position: (0.0, 1.0, 0.0),
+                yaw: 0.0,
+                pitch: 0.0,
+                projection: Perspective((
+                    fov: 1.3089969,
+                    z_near: 0.025,
+                    z_far: 128.0,
+                )),
+            ),
+            node_infos: {},
+        ),
+        "data/scene.rgs": (
+            camera_settings: (
+                position: (0.6955347, -3.2547672, -3.0),
+                yaw: 1.5707964,
+                pitch: 0.0,
+                projection: Orthographic((
+                    z_near: 0.025,
+                    z_far: 128.0,
+                    vertical_size: 5.0,
+                )),
+            ),
+            node_infos: {
+                (
+                    index: 4,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 11,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 47,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 50,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 60,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 9,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 67,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 82,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 61,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 80,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 52,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 5,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 62,
+                    generation: 3,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 62,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 64,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 54,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 59,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 15,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 1,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 53,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 49,
+                    generation: 6,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 51,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 51,
+                    generation: 5,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 63,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 6,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 46,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 17,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 49,
+                    generation: 5,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 2,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 49,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 54,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 66,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 50,
+                    generation: 5,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 48,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 14,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 65,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 53,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 12,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 83,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 0,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 52,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 61,
+                    generation: 3,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 79,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 8,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 84,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 55,
+                    generation: 1,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 3,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 7,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+            },
+        ),
+    },
+    recent: (
+        scenes: [
+            "data/scene.rgs",
+        ],
+    ),
+    windows: (
+        window_position: (0.0, 0.0),
+        window_size: (1920.0, 1013.0),
+        window_maximized: true,
+        layout: None,
+    ),
+)
