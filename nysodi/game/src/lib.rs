@@ -1,4 +1,3 @@
-//! Game project.
 use fyrox::{
     core::pool::Handle, core::visitor::prelude::*, core::reflect::prelude::*,
     event::Event,
@@ -6,13 +5,13 @@ use fyrox::{
     plugin::{Plugin, PluginContext, PluginRegistrationContext},
     scene::Scene,
 };
-use std::path::Path;
 
+// Assuming Player is a custom type defined elsewhere in your codebase
+// If it's not custom, ensure it's correctly imported from fyrox or another module
+
+use std::path::Path;
 mod player;
 use player::Player;
-
-// Re-export the engine.
-pub use fyrox;
 
 #[derive(Default, Visit, Reflect, Debug)]
 pub struct Game {
@@ -22,13 +21,13 @@ pub struct Game {
 impl Plugin for Game {
     fn register(&self, context: PluginRegistrationContext) {
         // Register your scripts here.
+        // If Player is custom, ensure it's correctly defined and registered
         context
             .serialization_context
             .script_constructors
             .add::<Player>("Player");
     }
-    
-    
+
     fn init(&mut self, scene_path: Option<&str>, context: PluginContext) {
         context
             .async_scene_loader
@@ -75,3 +74,4 @@ impl Plugin for Game {
         self.scene = scene;
     }
 }
+
