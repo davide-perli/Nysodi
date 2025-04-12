@@ -1,5 +1,5 @@
 //! Game project.
-
+ 
 mod bot;
 mod residuals;
 
