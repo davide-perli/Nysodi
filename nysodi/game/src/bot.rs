@@ -30,12 +30,6 @@ pub struct Bot {
     rectangle: InheritableVariable<Handle<Node>>,
     // ANCHOR_END: visual_fields
 
-    // ANCHOR: ground_probe_fields
-    ground_probe: InheritableVariable<Handle<Node>>,
-    ground_probe_distance: InheritableVariable<f32>,
-    ground_probe_timeout: f32,
-    // ANCHOR_END: ground_probe_fields
-
     // ANCHOR: movement_fields
     speed: InheritableVariable<f32>,
     direction: f32,
@@ -59,9 +53,6 @@ pub struct Bot {
 impl Default for Bot {
     fn default() -> Self {
         Self {
-            ground_probe: Default::default(),
-            ground_probe_distance: 2.0.into(),
-            ground_probe_timeout: 0.0,
             speed: 1.0.into(),
             direction: 1.0,
             front_obstacle_sensor: Default::default(),
@@ -77,56 +68,6 @@ impl Default for Bot {
 
 // ANCHOR: has_ground_in_front
 impl Bot {
-    fn has_ground_in_front(&self, ctx: &ScriptContext) -> bool {
-        // Do ground check using ray casting from the ground probe position down at some distance.
-        let Some(ground_probe) = ctx.scene.graph.try_get(*self.ground_probe) else {
-            return false;
-        };
-
-        let ground_probe_position = ground_probe.global_position().xy();
-
-        let mut intersections = Vec::new();
-        ctx.scene.graph.physics2d.cast_ray(
-            RayCastOptions {
-                ray_origin: ground_probe_position.into(),
-                // Cast the ray
-                ray_direction: Vector2::new(0.0, -*self.ground_probe_distance),
-                max_len: *self.ground_probe_distance,
-                groups: Default::default(),
-                // Make sure the closest intersection will be first in the list of intersections.
-                sort_results: true,
-            },
-            &mut intersections,
-        );
-
-        for intersection in intersections {
-            let Some(collider) = ctx.scene.graph.try_get(intersection.collider) else {
-                continue;
-            };
-
-            let Some(rigid_body) = ctx
-                .scene
-                .graph
-                .try_get_of_type::<RigidBody>(collider.parent())
-            else {
-                continue;
-            };
-
-            if rigid_body.body_type() == RigidBodyType::Static
-                && intersection
-                    .position
-                    .coords
-                    .metric_distance(&ground_probe_position)
-                    <= *self.ground_probe_distance
-            {
-                return true;
-            }
-        }
-
-        false
-    }
-    // ANCHOR_END: has_ground_in_front
-
     // ANCHOR: search_target
     fn search_target(&mut self, ctx: &mut ScriptContext) {
         let game = ctx.plugins.get::<Game>();
@@ -222,16 +163,6 @@ impl ScriptTrait for Bot {
             self.direction = -self.direction;
         }
         // ANCHOR_END: check_for_obstacles
-
-        // ANCHOR: ground_checks
-        self.ground_probe_timeout -= ctx.dt;
-        if self.ground_probe_timeout <= 0.0 {
-            if !self.has_ground_in_front(ctx) {
-                self.direction = -self.direction;
-            }
-            self.ground_probe_timeout = 0.3;
-        }
-        // ANCHOR_END: ground_checks
 
         // ANCHOR: move_to_target
         if self.target.is_some() {
