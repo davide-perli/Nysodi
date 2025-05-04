@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 fyrox = {workspace = true}
+fyrox-ui = "0.36.2"
 
 [features]
 default = ["fyrox/default"]
