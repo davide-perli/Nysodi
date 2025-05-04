@@ -74,6 +74,27 @@ impl Plugin for Game {
     }
 }
 
+fn bounding_boxes_intersect(a: &Node, b: &Node) -> bool {
+    // Get global positions (2D)
+    let a_pos = a.global_position().xy();
+    let b_pos = b.global_position().xy();
+
+    // Get bounding box half extents (width/2, height/2)
+    // You need to define how to get size; here we assume you have a method or fixed size
+    let a_size = get_node_size(a);
+    let b_size = get_node_size(b);
+
+    // AABB collision check
+    (a_pos.x - b_pos.x).abs() < (a_size.x + b_size.x) / 2.0 &&
+    (a_pos.y - b_pos.y).abs() < (a_size.y + b_size.y) / 2.0
+}
+
+// Helper function to get size of node's bounding box
+fn get_node_size(node: &Node) -> Vector2<f32> {
+    // Example: fixed size for all sprites, or you can extract from sprite/rectangle component
+    Vector2::new(1.0, 1.0) // Replace with actual size logic
+}
+
 // ANCHOR: sprite_field
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
 #[type_uuid(id = "c5671d19-9f1a-4286-8486-add4ebaadaec")]
@@ -89,6 +110,10 @@ struct Player {
     animations: Vec<SpriteSheetAnimation>,
     current_animation: u32,
     // ANCHOR_END: animation_fields
+
+    // after dying, the player will be respawned at this position and has a total of how many lives I decide upon
+    hearts: u32,
+    initial_position: Vector2<f32>,
 }
 
 // ANCHOR: animation_fields_defaults_begin
@@ -105,12 +130,15 @@ impl Default for Player {
             // ...
             animations: Default::default(),
             current_animation: 0,
+
+            hearts: 5,
+            initial_position: Vector2::new(0.0, 0.0), // Default to (0, 0)
         }
     }
 }
 // ANCHOR_END: animation_fields_defaults_end
 
-impl ScriptTrait for Player {
+impl ScriptTrait for Player { // Only for defining default values of fields and default methods/ Player's behaviour
     // ANCHOR: set_player_field
     fn on_start(&mut self, ctx: &mut ScriptContext) {
         ctx.plugins.get_mut::<Game>().player = ctx.handle;
@@ -141,6 +169,8 @@ impl ScriptTrait for Player {
     // Called every frame at fixed rate of 60 FPS.
     // ANCHOR: on_update_begin
     fn on_update(&mut self, context: &mut ScriptContext) {
+        let player_handle = context.plugins.get::<Game>().player;
+
         // The script can be assigned to any scene node, but we assert that it will work only with
         // 2d rigid body nodes.
         if let Some(rigid_body) = context.scene.graph[context.handle].cast_mut::<RigidBody>() {
@@ -228,4 +258,36 @@ impl ScriptTrait for Player {
         // ANCHOR: on_update_closing_bracket_1
     }
     // ANCHOR_END: on_update_closing_bracket_1
+
 }
+
+impl Player {
+    pub fn die(&mut self, context: &mut ScriptContext) {
+        if self.hearts > 0 {
+            self.hearts -= 1;
+
+            if let Some(rigid_body) = context.scene.graph[self.sprite].cast_mut::<RigidBody>() {
+                rigid_body.set_lin_vel(Vector2::zeros());
+            }
+
+            if let Some(node) = context.scene.graph.try_get_mut(self.sprite) {
+                let mut local_transform = node.local_transform_mut();
+                local_transform.set_position(Vector3::new(
+                    self.initial_position.x,
+                    self.initial_position.y,
+                    local_transform.position().z,
+                ));
+            }
+
+            self.current_animation = 1;
+            println!("Player died! Hearts left: {}", self.hearts);
+        } else {
+            println!("Game Over!");
+            // Add game over logic here
+        }
+    }
+}
+
+
+
+
