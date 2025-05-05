@@ -22,6 +22,9 @@ use fyrox::{
         node::Node,
         Scene,
     },
+    resource::texture::Texture,
+    scene::transform::TransformBuilder,
+    scene::dim2::rectangle::RectangleBuilder,
     script::{ScriptContext, ScriptTrait},
 };
 use std::path::Path;
@@ -34,6 +37,9 @@ pub struct Game {
     // ANCHOR: player_field
     player: Handle<Node>,
     // ANCHOR_END: player_field
+
+    // heart_texture: Handle<Texture>,
+    // heart_sprites: Vec<Handle<Node>>,
 }
 
 // ANCHOR: register
@@ -72,6 +78,8 @@ impl Plugin for Game {
             // scene.graph.physics2d.draw(&mut scene.drawing_context);
         }
     }
+    
+    
 }
 
 fn bounding_boxes_intersect(a: &Node, b: &Node) -> bool {
@@ -105,6 +113,7 @@ struct Player {
     move_right: bool,
     move_up: bool,
     move_down: bool,
+    game_over: bool,
 
     // ANCHOR: animation_fields
     animations: Vec<SpriteSheetAnimation>,
@@ -112,7 +121,10 @@ struct Player {
     // ANCHOR_END: animation_fields
 
     // after dying, the player will be respawned at this position and has a total of how many lives I decide upon
-    hearts: u32,
+    health: f32,
+    max_health: f32,
+    health_fill_handle: Handle<Node>,  
+
     initial_position: Vector2<f32>,
 }
 
@@ -126,22 +138,60 @@ impl Default for Player {
             move_right: false,
             move_up:false,
             move_down:false,
+            game_over: false,
             // ANCHOR: animation_fields_defaults_end
             // ...
             animations: Default::default(),
             current_animation: 0,
 
-            hearts: 5,
+            max_health: 100.0,
+            health: 100.0,
+            health_fill_handle : Handle::NONE,
             initial_position: Vector2::new(0.0, 0.0), // Default to (0, 0)
         }
     }
 }
 // ANCHOR_END: animation_fields_defaults_end
 
+impl Player {
+    // ANCHOR: health_bar
+    fn update_health_bar(&mut self, context: &mut ScriptContext) {
+        // Safety: Only update if handles are valid
+        if self.health_fill_handle.is_some() {
+            let health_ratio = self.health / self.max_health;
+            let full_width = 100.0; // Set to your bar's full width
+
+            println!("Updating health bar: health_ratio = {}", health_ratio);
+
+            if let Some(health_fill_rect) = context.scene.graph.try_get_mut(self.health_fill_handle).and_then(|n| n.cast_mut::<Rectangle>()) {
+                let mut local_transform = health_fill_rect.local_transform_mut();
+                local_transform.set_scale(Vector3::new(health_ratio, local_transform.scale().y, local_transform.scale().z));
+                println!("New scale: {:?}", local_transform.scale());
+            }
+
+            // Optionally, position the bar on the left so sit's not centered
+            if let Some(health_fill_rect) = context.scene.graph.try_get_mut(self.health_fill_handle).and_then(|n| n.cast_mut::<Rectangle>()) {
+                let mut local_transform = health_fill_rect.local_transform_mut();
+                local_transform.set_position(Vector3::new((full_width - health_ratio * full_width) / 200.0, local_transform.scale().y, local_transform.scale().z));
+                println!("New position: {:?}", local_transform.position());
+            }
+        }
+    }
+    // ANCHOR_END: health_bar
+}
+
 impl ScriptTrait for Player { // Only for defining default values of fields and default methods/ Player's behaviour
     // ANCHOR: set_player_field
     fn on_start(&mut self, ctx: &mut ScriptContext) {
         ctx.plugins.get_mut::<Game>().player = ctx.handle;
+
+        self.max_health = 100.0;
+        self.health = self.max_health;
+
+        // Debugging: Check if handles are set
+        println!("Health Fill Handle: {:?}", self.health_fill_handle);
+
+        // the handles for the health bar are set in the editor
     }
     // ANCHOR_END: set_player_field
 
@@ -158,6 +208,21 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
                         PhysicalKey::Code(KeyCode::KeyD) | PhysicalKey::Code(KeyCode::ArrowRight)=> self.move_right = pressed,
                         PhysicalKey::Code(KeyCode::KeyW) | PhysicalKey::Code(KeyCode::ArrowUp)=> self.move_up = pressed,
                         PhysicalKey::Code(KeyCode::KeyS) | PhysicalKey::Code(KeyCode::ArrowDown)=> self.move_down = pressed,
+                        PhysicalKey::Code(KeyCode::Space) if pressed => {
+                            // Reduce health by 20 when space is pressed
+                            self.health = (self.health - 20.0).max(0.0); // Ensure health doesn't go below 0
+                        },
+                        PhysicalKey::Code(KeyCode::KeyR) if pressed && self.game_over => {
+                            // Reset health to max when R is pressed
+                            self.health = self.max_health;
+                            self.game_over = false; // Reset game over state
+                            println!("Game Restarted! Health reset to {}", self.health);
+                        },
+                        PhysicalKey::Code(KeyCode::Escape) if pressed && self.game_over => {
+                            // Exit the game when Escape is pressed
+                            println!("Exiting game...");
+                            std::process::exit(0);
+                        },
                         _ => {}
                     }
                 }
@@ -170,6 +235,12 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
     // ANCHOR: on_update_begin
     fn on_update(&mut self, context: &mut ScriptContext) {
         let player_handle = context.plugins.get::<Game>().player;
+
+
+        if self.game_over {
+            return; // Stop updating if the game is over
+        }
+    
 
         // The script can be assigned to any scene node, but we assert that it will work only with
         // 2d rigid body nodes.
@@ -255,39 +326,19 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
         }
         // ANCHOR_END: applying_animation
 
+        // ANCHOR: health_bar
+        println!("Player health: {}", self.health);
+        self.update_health_bar(context);
+
+        if self.health <= 0.0 {
+            self.game_over = true;
+            println!("Game Over! Press R to Restart or Esc to Exit.");
+            return;
+        }
+
         // ANCHOR: on_update_closing_bracket_1
     }
     // ANCHOR_END: on_update_closing_bracket_1
 
 }
-
-impl Player {
-    pub fn die(&mut self, context: &mut ScriptContext) {
-        if self.hearts > 0 {
-            self.hearts -= 1;
-
-            if let Some(rigid_body) = context.scene.graph[self.sprite].cast_mut::<RigidBody>() {
-                rigid_body.set_lin_vel(Vector2::zeros());
-            }
-
-            if let Some(node) = context.scene.graph.try_get_mut(self.sprite) {
-                let mut local_transform = node.local_transform_mut();
-                local_transform.set_position(Vector3::new(
-                    self.initial_position.x,
-                    self.initial_position.y,
-                    local_transform.position().z,
-                ));
-            }
-
-            self.current_animation = 1;
-            println!("Player died! Hearts left: {}", self.hearts);
-        } else {
-            println!("Game Over!");
-            // Add game over logic here
-        }
-    }
-}
-
-
-
 
