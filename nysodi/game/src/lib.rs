@@ -7,28 +7,39 @@ mod residuals;
 use crate::bot::Bot;
 use fyrox::{
     core::{
-        algebra::{Vector2, Vector3},
-        pool::Handle,
-        reflect::prelude::*,
-        type_traits::prelude::*,
-        visitor::prelude::*,
-    },
-    event::{ElementState, Event, WindowEvent},
-    keyboard::{KeyCode, PhysicalKey},
-    plugin::{Plugin, PluginContext, PluginRegistrationContext},
+        algebra::{Vector2, Vector3}, 
+        pool::Handle, 
+        reflect::prelude::*, 
+        task::TaskPool, 
+        type_traits::prelude::*, 
+        visitor::prelude::*
+    }, 
+    engine::ScriptProcessor, 
+    event::{ElementState, Event, WindowEvent}, 
+    keyboard::{KeyCode, PhysicalKey}, 
+    plugin::{Plugin, PluginContext, PluginRegistrationContext}, 
     scene::{
-        animation::spritesheet::SpriteSheetAnimation,
-        dim2::{rectangle::Rectangle, rigidbody::RigidBody},
-        node::Node,
-        Scene,
+        animation::spritesheet::SpriteSheetAnimation, base::BaseBuilder, 
+        dim2::{
+            collider::{Collider, ColliderBuilder, ColliderShape, CuboidShape},
+            rectangle::{Rectangle, RectangleBuilder},
+            rigidbody::{RigidBody, RigidBodyBuilder}
+        }, 
+        node::Node, 
+        transform::TransformBuilder, 
+        Scene
+    }, script::{ScriptContext, ScriptTrait},
+    rand::{self, Rng},
+    material::{Material, MaterialResource, MaterialResourceExtension},
+    gui::{
+        texture::{Texture, TextureResource}, 
+        widget::WidgetBuilder
     },
-    resource::texture::Texture,
-    scene::transform::TransformBuilder,
-    scene::dim2::rectangle::RectangleBuilder,
-    script::{ScriptContext, ScriptTrait},
+    asset::manager::ResourceManager,
 };
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 // ANCHOR_END: imports
+
 
 #[derive(Visit, Reflect, Debug, Default)]
 pub struct Game {
@@ -78,29 +89,6 @@ impl Plugin for Game {
             // scene.graph.physics2d.draw(&mut scene.drawing_context);
         }
     }
-    
-    
-}
-
-fn bounding_boxes_intersect(a: &Node, b: &Node) -> bool {
-    // Get global positions (2D)
-    let a_pos = a.global_position().xy();
-    let b_pos = b.global_position().xy();
-
-    // Get bounding box half extents (width/2, height/2)
-    // You need to define how to get size; here we assume you have a method or fixed size
-    let a_size = get_node_size(a);
-    let b_size = get_node_size(b);
-
-    // AABB collision check
-    (a_pos.x - b_pos.x).abs() < (a_size.x + b_size.x) / 2.0 &&
-    (a_pos.y - b_pos.y).abs() < (a_size.y + b_size.y) / 2.0
-}
-
-// Helper function to get size of node's bounding box
-fn get_node_size(node: &Node) -> Vector2<f32> {
-    // Example: fixed size for all sprites, or you can extract from sprite/rectangle component
-    Vector2::new(1.0, 1.0) // Replace with actual size logic
 }
 
 // ANCHOR: sprite_field
@@ -126,6 +114,9 @@ struct Player {
     health_fill_handle: Handle<Node>,  
 
     initial_position: Vector2<f32>,
+
+    item_timer: Option<f32>,
+    last_health: f32,
 }
 
 // ANCHOR: animation_fields_defaults_begin
@@ -148,6 +139,8 @@ impl Default for Player {
             health: 100.0,
             health_fill_handle : Handle::NONE,
             initial_position: Vector2::new(0.0, 0.0), // Default to (0, 0)
+            item_timer: None,
+            last_health: 100.0,
         }
     }
 }
@@ -155,6 +148,48 @@ impl Default for Player {
 
 impl Player {
     // ANCHOR: health_bar
+
+    fn spawn_item(&self, context: &mut ScriptContext) -> Handle<Node> {
+        // Get the player's current position
+        let player_position = context.scene.graph[self.sprite]
+            .global_position()
+            .xy();
+    
+        // Generate a random position within a 5-block radius
+        let mut rng = rand::thread_rng();
+        let offset_x: f32 = rng.gen_range(-5.0..=5.0);
+        let offset_y: f32 = rng.gen_range(-5.0..=5.0);
+        let mut item_position = Vector2::new(player_position.x + offset_x, player_position.y + offset_y);
+    
+        // Clamp the position to the specified bounds
+        item_position.x = item_position.x.clamp(-11.0, 11.0);
+        item_position.y = item_position.y.clamp(-4.0, 17.0);
+    
+        // Load the heart texture
+        let heart_texture = context.resource_manager.request::<Texture>("data/heart.png");
+    
+        // Create the item node
+        let item = RectangleBuilder::new(
+            BaseBuilder::new()
+                .with_local_transform(
+                    TransformBuilder::new()
+                        .with_local_position(Vector3::new(item_position.x, item_position.y, 0.0))
+                        .with_local_scale(Vector3::new(0.7, 0.7, 0.7)) // Set size here
+                        .build(),
+                ),
+        )
+        .build(&mut context.scene.graph);
+    
+        // Apply the heart texture to the rectangle's material
+        if let Some(rectangle) = context.scene.graph.try_get_mut(item).and_then(|n| n.cast_mut::<Rectangle>()) {
+            let material = rectangle.material(); // Get the material
+            material.data_ref().bind("diffuseTexture", heart_texture); // Bind the texture
+        }
+    
+        println!("Item spawned at: {:?}", item_position);
+    
+        item
+    }
     fn update_health_bar(&mut self, context: &mut ScriptContext) {
         // Safety: Only update if handles are valid
         if self.health_fill_handle.is_some() {
@@ -241,6 +276,76 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
             return; // Stop updating if the game is over
         }
     
+        // Update the item timer
+        if let Some(timer) = &mut self.item_timer {
+            *timer += context.dt; // Increment the timer by the delta time
+
+            if *timer >= 5.0 {
+                // Find the item handle
+                let item_handle = context
+                    .scene
+                    .graph
+                    .pair_iter_mut()
+                    .find(|(_, node)| node.name() == "Item" && node.visibility())
+                    .map(|(handle, _)| handle);
+
+                if let Some(item) = item_handle {
+                    // Mark the item as invisible (deactivate it)
+                    if let Some(node) = context.scene.graph.try_get_mut(item) {
+                        node.set_visibility(false);
+                    }
+                }
+
+                self.item_timer = None; // Reset the timer
+            }
+        }
+
+
+        // Find the item handle
+            let item_handle = context
+            .scene
+            .graph
+            .pair_iter_mut()
+            .find(|(_, node)| node.name() == "Item" && node.visibility())
+            .map(|(handle, _)| handle);
+
+        if let Some(item) = item_handle {
+            // Perform immutable operations after mutable borrow is dropped
+            let player_position = context.scene.graph[self.sprite]
+                .global_position()
+                .xy();
+            let item_position = context.scene.graph[item]
+                .global_position()
+                .xy();
+
+            // Check if the player is close enough to pick up the item
+            if (player_position - item_position).norm() < 1.0 {
+                println!("Item picked up!");
+
+                // Mark the item as invisible (deactivate it)
+                if let Some(node) = context.scene.graph.try_get_mut(item) {
+                    node.set_visibility(false);
+                }
+
+                // Increase health
+                self.health = (self.health + 30.0).min(self.max_health);
+
+                // Reset the timer
+                self.item_timer = None;
+
+                // Update last_health to the current health
+                self.last_health = self.health;
+            }
+        } else if self.health < 50.0 && self.item_timer.is_none() && self.health < self.last_health {
+            // Spawn an item if needed (when health is low, no active item exists, and health has declined)
+            let item = self.spawn_item(context);
+            context.scene.graph[item].set_name("Item");
+            context.scene.graph[item].set_visibility(true); // Ensure the new item is visible
+            self.item_timer = Some(0.0); // Start the timer for the new item
+    
+            // Update last_health to the current health
+            self.last_health = self.health;
+        }
 
         // The script can be assigned to any scene node, but we assert that it will work only with
         // 2d rigid body nodes.
@@ -265,8 +370,8 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
 
             // ANCHOR: sprite_scaling
             // It is always a good practice to check whether the handles are valid, at this point we don't know
-            // for sure what's the value of the `sprite` field. It can be unassigned and the following code won't
-            // execute. A simple `context.scene.graph[self.sprite]` would just panicked in this case.
+            // for sure what's the value of the sprite field. It can be unassigned and the following code won't
+            // execute. A simple context.scene.graph[self.sprite] would just panicked in this case.
             if let Some(sprite) = context.scene.graph.try_get_mut(self.sprite) {
                 // We want to change player orientation only if he's moving.
                 if x_speed != 0.0 {
@@ -341,4 +446,3 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
     // ANCHOR_END: on_update_closing_bracket_1
 
 }
-
