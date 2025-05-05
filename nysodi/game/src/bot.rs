@@ -1,5 +1,6 @@
 // ANCHOR: imports
 use crate::Game;
+use crate::Player;
 use fyrox::{
     core::{
         algebra::{Vector2, Vector3},
@@ -9,7 +10,7 @@ use fyrox::{
         variable::InheritableVariable,
         visitor::prelude::*,
     },
-    graph::{BaseSceneGraph, SceneGraph},
+    graph::{SceneGraph},
     scene::{
         animation::spritesheet::SpriteSheetAnimation,
         dim2::{
@@ -19,6 +20,8 @@ use fyrox::{
         rigidbody::RigidBodyType,
     },
     script::{ScriptContext, ScriptTrait},
+    event::{ElementState, Event, WindowEvent}, // Added imports
+    keyboard::{KeyCode, PhysicalKey},         // Added imports
 };
 // ANCHOR_END: imports
 
@@ -46,6 +49,11 @@ pub struct Bot {
     // ANCHOR: animation_fields
     animations: Vec<SpriteSheetAnimation>,
     current_animation: InheritableVariable<u32>,
+    health: f32,
+    max_health: f32,
+    health_fill_handle: Handle<Node>,
+    damage_timer: f32,
+    respawn_timer: Option<f32>,
     // ANCHOR_END: animation_fields
 }
 
@@ -61,6 +69,11 @@ impl Default for Bot {
             rectangle: Default::default(),
             animations: Default::default(),
             current_animation: Default::default(),
+            health: 100.0,
+            max_health: 100.0,
+            health_fill_handle: Handle::NONE,
+            damage_timer: 0.0,
+            respawn_timer: None,
         }
     }
 }
@@ -68,32 +81,28 @@ impl Default for Bot {
 
 // ANCHOR: has_ground_in_front
 impl Bot {
+    fn update_health_bar(&mut self, context: &mut ScriptContext) {
+        if self.health_fill_handle.is_some() {
+            let health_ratio = self.health / self.max_health;
+            let full_width = 100.0; // Set to your bar's full width
+
+            if let Some(health_fill_rect) = context.scene.graph.try_get_mut(self.health_fill_handle).and_then(|n| n.cast_mut::<Rectangle>()) {
+                let mut local_transform = health_fill_rect.local_transform_mut();
+                local_transform.set_scale(Vector3::new(health_ratio, local_transform.scale().y, local_transform.scale().z));
+            }
+
+            if let Some(health_fill_rect) = context.scene.graph.try_get_mut(self.health_fill_handle).and_then(|n| n.cast_mut::<Rectangle>()) {
+                let mut local_transform = health_fill_rect.local_transform_mut();
+                local_transform.set_position(Vector3::new((full_width - health_ratio * full_width) / 200.0, local_transform.position().y, local_transform.position().z));
+            }
+        }
+    }
+
     fn locate_target(&mut self, ctx: &mut ScriptContext) {
         let game = ctx.plugins.get::<Game>();
         self.target = game.player;
     }
-    // ANCHOR: search_target
-    // fn search_target(&mut self, ctx: &mut ScriptContext) {
-    //     let game = ctx.plugins.get::<Game>();
-    
-    //     let self_position = ctx.scene.graph[ctx.handle].global_position();
-    
-    //     let Some(player) = ctx.scene.graph.try_get(game.player) else {
-    //         return;
-    //     };
-    
-    //     let player_position = player.global_position();
-    
-    //     let dx = player_position.x - self_position.x;
-    //     let dy = player_position.y - self_position.y;
-    
-    //     if dx.abs() < 3.0 && dy.abs() < 3.0 {
-    //         self.target = game.player;
-    
-    //         // Set direction for both axes
-    //         self.direction = Vector2::new(dx.signum(), dy.signum());
-    //     }
-    // }
+
     fn move_to_target(&mut self, ctx: &mut ScriptContext) {
         // 2D chase towards player
         let tp = ctx.scene.graph[self.target].global_position().xy();
@@ -110,28 +119,6 @@ impl Bot {
     }
     // ANCHOR_END: search_target
 
-    // ANCHOR: do_move
-    // fn do_move(&mut self, ctx: &mut ScriptContext) {
-    //     let Some(rigid_body) = ctx.scene.graph.try_get_mut_of_type::<RigidBody>(ctx.handle) else {
-    //         return;
-    //     };
-    
-    //     let speed = *self.speed; // Sau self.speed.get_value()
-    //     let velocity = Vector2::new(
-    //         speed * self.direction.x,
-    //         speed * self.direction.y,
-    //     );
-    
-    //     rigid_body.set_lin_vel(velocity);
-    
-    //     if let Some(rectangle) = ctx.scene.graph.try_get_mut(*self.rectangle) {
-    //         rectangle.local_transform_mut().set_scale(Vector3::new(
-    //             2.0 * self.direction.x.signum(),
-    //             2.0,
-    //             1.0,
-    //         ));
-    //     }
-    // }
     /// Apply velocity to the bot's RigidBody2D and flip sprite to always face player
     fn do_move(&mut self, ctx: &mut ScriptContext) {
         // Set movement velocity
@@ -202,64 +189,83 @@ impl Bot {
 }
 
 impl ScriptTrait for Bot {
-    // ANCHOR: search_target_call
     fn on_update(&mut self, ctx: &mut ScriptContext) {
-        self.locate_target(ctx);
-        // ANCHOR_END: search_target_call
-
-        // ANCHOR: check_for_obstacles
-        if self.has_obstacles(ctx) {
-            self.direction.x = -self.direction.x;
+        
+        // If the bot is defeated, start the respawn timer
+        if self.health <= 0.0 {
+            if let Some(timer) = &mut self.respawn_timer {
+                *timer += ctx.dt; // Increment the respawn timer
+                if *timer >= 3.0 {
+                    // Respawn the bot after 3 seconds
+                    self.health = self.max_health;
+                    self.respawn_timer = None; // Reset the timer
+                    if let Some(node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                        node.set_visibility(true); // Make the bot visible again
+                    }
+                    println!("Bot respawned!");
+                }
+            } else {
+                // Start the respawn timer if it hasn't started yet
+                self.respawn_timer = Some(0.0);
+            }
+            return; // Skip the rest of the update logic while the bot is defeated
         }
-        // ANCHOR_END: check_for_obstacles
 
-        // ANCHOR: move_to_target
+        self.locate_target(ctx);
         self.move_to_target(ctx);
-        // ANCHOR_END: move_to_target
-
-        // ANCHOR: do_move_call
         self.do_move(ctx);
-        // ANCHOR_END: do_move_call
 
-        // ANCHOR: animation_switching
-        // if self.direction != Vector2::zeros() {
-        //     self.current_animation.set_value_and_mark_modified(2);
-        // }
-        // if self.target.is_some() {
-        //     let target_position = ctx.scene.graph[self.target].global_position();
-        //     let self_position = ctx.scene.graph[ctx.handle].global_position();
-        //     if target_position.metric_distance(&self_position) < 1.1 {
-        //         self.current_animation.set_value_and_mark_modified(0);
-        //     }
-        // }
+        // Update the bot's health bar
+        self.update_health_bar(ctx);
+
+        // Check if the bot is within a 1-tile radius of the player
+        let player_position = ctx.scene.graph[self.target].global_position().xy();
+        let bot_position = ctx.scene.graph[ctx.handle].global_position().xy();
+        let distance = (player_position - bot_position).norm();
+
+        if distance <= 1.5 {
+            // Increment the damage timer
+            self.damage_timer += ctx.dt;
+        
+            // Deal damage every second
+            if self.damage_timer >= 0.75 {
+                // Reduce the player's health by 20
+                let game = ctx.plugins.get::<Game>();
+                if let Some(player) = ctx.scene.graph.try_get_mut(game.player) {
+                    if let Some(player_script) = player
+                        .script_mut(0)
+                        .and_then(|s| s.cast_mut::<Player>()) 
+                    {
+                        // Skip damage logic if the player is already defeated
+                        if player_script.game_over {
+                            return;
+                        }
+        
+                        player_script.health = (player_script.health - 20.0).max(0.0);
+                        println!("Player took damage! Health: {}", player_script.health);
+        
+                        // Check if the player is dead
+                        if player_script.health <= 0.0 {
+                            println!("Player defeated!");
+                            player_script.game_over = true;
+                        }
+                    }
+                }
+        
+                // Reset the damage timer
+                self.damage_timer = 0.0;
+            }
+        } else {
+            // Reset the damage timer if the bot is not within range
+            self.damage_timer = 0.0;
+        }
+
         if self.direction.x.abs() > 0.0 || self.direction.y.abs() > 0.0 {
             self.current_animation.set_value_and_mark_modified(2);
         } else {
             self.current_animation.set_value_and_mark_modified(0);
         }
-        // ANCHOR_END: animation_switching
 
-        // ANCHOR: applying_animation
-        // if let Some(current_animation) = self.animations.get_mut(*self.current_animation as usize) {
-        //     current_animation.update(ctx.dt);
-
-        //     if let Some(sprite) = ctx
-        //         .scene
-        //         .graph
-        //         .try_get_mut_of_type::<Rectangle>(*self.rectangle)
-        //     {
-        //         // Set new frame to the sprite.
-        //         sprite
-        //             .material()
-        //             .data_ref()
-        //             .bind("diffuseTexture", current_animation.texture());
-        //         sprite.set_uv_rect(
-        //             current_animation
-        //                 .current_frame_uv_rect()
-        //                 .unwrap_or_default(),
-        //         );
-        //     }
-        // }
         if let Some(anim) = self.animations.get_mut(*self.current_animation as usize) {
             anim.update(ctx.dt);
             if let Some(rect) = ctx.scene.graph.try_get_mut(*self.rectangle)
@@ -269,6 +275,43 @@ impl ScriptTrait for Bot {
                 rect.set_uv_rect(anim.current_frame_uv_rect().unwrap_or_default());
             }
         }
-        // ANCHOR_END: applying_animation
+    }
+
+    fn on_os_event(&mut self, event: &Event<()>, ctx: &mut ScriptContext) {
+        if let Event::WindowEvent { event, .. } = event {
+            if let WindowEvent::KeyboardInput { event, .. } = event {
+                if let PhysicalKey::Code(keycode) = event.physical_key {
+                    let pressed = event.state == ElementState::Pressed;
+
+                    match event.physical_key {
+                        PhysicalKey::Code(KeyCode::ShiftLeft) | PhysicalKey::Code(KeyCode::ShiftRight) if pressed => {
+                            // Check if the player is within a 2-tile radius
+                            let player_position = ctx.scene.graph[self.target].global_position().xy();
+                            let bot_position = ctx.scene.graph[ctx.handle].global_position().xy();
+                            let distance = (player_position - bot_position).norm();
+
+                            if distance <= 2.0 {
+                                // Reduce bot's health by 10
+                                self.health = (self.health - 10.0).max(0.0);
+                                println!("Bot took damage! Health: {}", self.health);
+
+                                // Update the health bar
+                                self.update_health_bar(ctx);
+
+                                // Check if the bot is dead
+                                if self.health <= 0.0 {
+                                    println!("Bot defeated!");
+                                    // Optionally, deactivate the bot or trigger a death animation
+                                    if let Some(node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                                        node.set_visibility(false);
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
     }
 }

@@ -196,19 +196,19 @@ impl Player {
             let health_ratio = self.health / self.max_health;
             let full_width = 100.0; // Set to your bar's full width
 
-            println!("Updating health bar: health_ratio = {}", health_ratio);
+            // println!("Updating health bar: health_ratio = {}", health_ratio);
 
             if let Some(health_fill_rect) = context.scene.graph.try_get_mut(self.health_fill_handle).and_then(|n| n.cast_mut::<Rectangle>()) {
                 let mut local_transform = health_fill_rect.local_transform_mut();
                 local_transform.set_scale(Vector3::new(health_ratio, local_transform.scale().y, local_transform.scale().z));
-                println!("New scale: {:?}", local_transform.scale());
+                // println!("New scale: {:?}", local_transform.scale());
             }
 
             // Optionally, position the bar on the left so sit's not centered
             if let Some(health_fill_rect) = context.scene.graph.try_get_mut(self.health_fill_handle).and_then(|n| n.cast_mut::<Rectangle>()) {
                 let mut local_transform = health_fill_rect.local_transform_mut();
                 local_transform.set_position(Vector3::new((full_width - health_ratio * full_width) / 200.0, local_transform.scale().y, local_transform.scale().z));
-                println!("New position: {:?}", local_transform.position());
+                // println!("New position: {:?}", local_transform.position());
             }
         }
     }
@@ -224,7 +224,8 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
         self.health = self.max_health;
 
         // Debugging: Check if handles are set
-        println!("Health Fill Handle: {:?}", self.health_fill_handle);
+
+        // println!("Health Fill Handle: {:?}", self.health_fill_handle);
 
         // the handles for the health bar are set in the editor
     }
@@ -232,7 +233,7 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
 
     // ANCHOR: on_os_event
     // Called everytime when there is an event from OS (mouse click, key press, etc.)
-    fn on_os_event(&mut self, event: &Event<()>, _context: &mut ScriptContext) {
+    fn on_os_event(&mut self, event: &Event<()>, context: &mut ScriptContext) {
         if let Event::WindowEvent { event, .. } = event {
             if let WindowEvent::KeyboardInput { event, .. } = event {
                 if let PhysicalKey::Code(keycode) = event.physical_key {
@@ -251,6 +252,14 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
                             // Reset health to max when R is pressed
                             self.health = self.max_health;
                             self.game_over = false; // Reset game over state
+                            // Reset the player's position to the starting point
+                            if let Some(node) = context.scene.graph.try_get_mut(context.handle) {
+                                node.local_transform_mut().set_position(Vector3::new(
+                                    self.initial_position.x - 1.0,
+                                    self.initial_position.y - 4.0,
+                                    0.0,
+                                ));
+                            }
                             println!("Game Restarted! Health reset to {}", self.health);
                         },
                         PhysicalKey::Code(KeyCode::Escape) if pressed && self.game_over => {
@@ -271,6 +280,14 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
     fn on_update(&mut self, context: &mut ScriptContext) {
         let player_handle = context.plugins.get::<Game>().player;
 
+        // Update the health bar based on the current health
+        self.update_health_bar(context);
+
+        // Check if the player is defeated
+        if self.health <= 0.0 {
+            self.game_over = true;
+            println!("Game Over! Press R to Restart or Esc to Exit.");
+        }
 
         if self.game_over {
             return; // Stop updating if the game is over
@@ -320,7 +337,7 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
 
             // Check if the player is close enough to pick up the item
             if (player_position - item_position).norm() < 1.0 {
-                println!("Item picked up!");
+                // println!("Item picked up!");
 
                 // Mark the item as invisible (deactivate it)
                 if let Some(node) = context.scene.graph.try_get_mut(item) {
@@ -432,7 +449,7 @@ impl ScriptTrait for Player { // Only for defining default values of fields and 
         // ANCHOR_END: applying_animation
 
         // ANCHOR: health_bar
-        println!("Player health: {}", self.health);
+        // println!("Player health: {}", self.health);
         self.update_health_bar(context);
 
         if self.health <= 0.0 {
