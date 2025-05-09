@@ -81,6 +81,13 @@ impl Default for Bot {
 
 // ANCHOR: has_ground_in_front
 impl Bot {
+    pub fn get_health(&self) -> f32 {
+        self.health
+    }
+
+    pub fn set_health(&mut self, new_health: f32) {
+        self.health = new_health;
+    }
     fn update_health_bar(&mut self, context: &mut ScriptContext) {
         if self.health_fill_handle.is_some() {
             let health_ratio = self.health / self.max_health;
