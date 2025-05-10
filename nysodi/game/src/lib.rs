@@ -110,6 +110,7 @@ struct Player {
     item_timer: Option<f32>,
     bomb_timer: f32,
     last_health: f32,
+    heart_pulse_timer: f32,
 }
 
 impl Default for Player {
@@ -130,6 +131,7 @@ impl Default for Player {
             item_timer: None,
             bomb_timer: 0.0,
             last_health: 100.0,
+            heart_pulse_timer: 0.0,
         }
     }
 }
@@ -285,6 +287,11 @@ impl ScriptTrait for Player {
             return;
         }
 
+        // Animate the heart's pulsing effect
+        self.heart_pulse_timer += context.dt;
+        let pulse_scale = 0.7 + 0.1 * (self.heart_pulse_timer * 3.0).sin(); // Oscillates between 0.6 and 0.8
+
+
         let heart_handle = context
             .scene
             .graph
@@ -295,6 +302,12 @@ impl ScriptTrait for Player {
         if let Some(hh) = heart_handle {
             let player_pos = context.scene.graph[self.sprite].global_position().xy();
             let heart_pos = context.scene.graph[hh].global_position().xy();
+
+            if let Some(heart_node) = context.scene.graph.try_get_mut(hh) {
+                heart_node
+                    .local_transform_mut()
+                    .set_scale(Vector3::new(pulse_scale, pulse_scale, pulse_scale));
+            }
 
             if (player_pos - heart_pos).norm() < 1.0 {
                 if let Some(node) = context.scene.graph.try_get_mut(hh) {
