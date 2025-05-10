@@ -54,6 +54,7 @@ pub struct Bot {
     health_fill_handle: Handle<Node>,
     damage_timer: f32,
     respawn_timer: Option<f32>,
+    pending_health_update: Option<f32>,
     // ANCHOR_END: animation_fields
 }
 
@@ -74,6 +75,8 @@ impl Default for Bot {
             health_fill_handle: Handle::NONE,
             damage_timer: 0.0,
             respawn_timer: None,
+            pending_health_update: None,
+
         }
     }
 }
@@ -81,6 +84,13 @@ impl Default for Bot {
 
 // ANCHOR: has_ground_in_front
 impl Bot {
+    pub fn get_health(&self) -> f32 {
+        self.health
+    }
+
+    pub fn set_health(&mut self, new_health: f32) {
+        self.pending_health_update = Some(new_health);
+    }
     fn update_health_bar(&mut self, context: &mut ScriptContext) {
         if self.health_fill_handle.is_some() {
             let health_ratio = self.health / self.max_health;
@@ -190,6 +200,17 @@ impl Bot {
 
 impl ScriptTrait for Bot {
     fn on_update(&mut self, ctx: &mut ScriptContext) {
+        // Apply pending health update if any
+        if let Some(new_health) = self.pending_health_update.take() {
+            self.health = new_health;
+            self.update_health_bar(ctx);
+            if self.health <= 0.0 {
+                if let Some(node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                    node.set_visibility(false); // Make the bot invisible
+                }
+                println!("Bot defeated!");
+            }
+        }
         
         // If the bot is defeated, start the respawn timer
         if self.health <= 0.0 {
