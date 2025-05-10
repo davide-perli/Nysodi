@@ -290,6 +290,8 @@ impl ScriptTrait for Player {
         // Animate the heart's pulsing effect
         self.heart_pulse_timer += context.dt;
         let pulse_scale = 0.7 + 0.1 * (self.heart_pulse_timer * 3.0).sin(); // Oscillates between 0.6 and 0.8
+        // Animate the bomb's pulsing effect
+        let bomb_pulse_scale = 0.7 + 0.05 * (self.heart_pulse_timer * 5.0).sin(); // Oscillates between 0.65 and 0.75
 
 
         let heart_handle = context
@@ -366,6 +368,13 @@ impl ScriptTrait for Player {
         if let Some(bh) = bomb_handle {
             let player_pos = context.scene.graph[self.sprite].global_position().xy();
             let bomb_pos = context.scene.graph[bh].global_position().xy();
+
+            if let Some(bomb_node) = context.scene.graph.try_get_mut(bh) {
+                bomb_node
+                    .local_transform_mut()
+                    .set_scale(Vector3::new(bomb_pulse_scale, bomb_pulse_scale, bomb_pulse_scale));
+            }
+
 
             if (player_pos - bomb_pos).norm() < 1.0 {
                 println!("Bomb exploded!");
