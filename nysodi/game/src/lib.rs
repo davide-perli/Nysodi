@@ -397,16 +397,15 @@ impl ScriptTrait for Player {
                         // Adjust the scale of the rectangle to make the texture appear larger
                         bomb_node
                         .local_transform_mut()
-                        .set_scale(Vector3::new(3.0, 3.0, 1.0)); // Scale the rectangle (3x larger)
+                        .set_scale(Vector3::new(3.5, 3.5, 1.0)); // Scale the rectangle (3x larger)
 
 
                     println!("Explosion scale set to: {:?}, UV rect set to full texture.", bomb_node.local_transform().scale());
                     
-                    context.scene.graph.update_hierarchical_data();
                     }
             
                     // Start the explosion timer
-                    self.explosion_timer = Some(1.0);
+                    self.explosion_timer = Some(0.5);
             
                     // Damage bots within the explosion radius
                     let explosion_radius = 5.0; // Adjust radius as needed
