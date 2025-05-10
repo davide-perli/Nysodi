@@ -2,12 +2,12 @@
 
 mod bot;
 mod residuals;
-
+        
 // ANCHOR: imports
 use crate::bot::Bot;
 use fyrox::{
     core::{
-        algebra::{Vector2, Vector3},
+        algebra::{Vector2, Vector3},                                
         pool::Handle,
         reflect::prelude::*,
         task::TaskPool,
