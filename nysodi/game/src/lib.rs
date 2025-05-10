@@ -408,7 +408,7 @@ impl ScriptTrait for Player {
                     self.explosion_timer = Some(0.5);
             
                     // Damage bots within the explosion radius
-                    let explosion_radius = 5.0; // Adjust radius as needed
+                    let explosion_radius = 6.0; // Adjust radius as needed
                     let bots_to_hit: Vec<_> = context
                         .scene
                         .graph
@@ -417,19 +417,35 @@ impl ScriptTrait for Player {
                             let bot_pos = node.global_position().xy();
             
                             if let Some(bot_script) = node.script_mut(0).and_then(|s| s.cast_mut::<Bot>()) {
-                                if (bot_pos - bomb_pos).norm() <= explosion_radius {
-                                    println!("Bot found at position: {:?}", bot_pos);
-                                    return Some((h, bot_script));
+                                let distance = (bot_pos - bomb_pos).norm();
+                                if distance <= explosion_radius {
+                                    println!("Bot found at position: {:?}, distance: {}", bot_pos, distance);
+                                    return Some((h, bot_script, distance));
                                 }
                             }
                             None
                         })
                         .collect();
             
-                    for (bot_h, bot_script) in bots_to_hit {
-                        let new_health = (bot_script.get_health() - 50.0).max(0.0);
+                    for (bot_h, bot_script, distance) in bots_to_hit {
+                        let damage = if distance <= 3.0 {
+                            100.0
+                        } else if distance <= 4.0 {
+                            70.0
+                        } else if distance <= 5.0 {
+                            40.0
+                        } else if distance <= 6.0 {
+                            10.0
+                        } else {
+                            0.0
+                        };
+
+                        let new_health = (bot_script.get_health() - damage).max(0.0);
                         bot_script.set_health(new_health);
-                        println!("Bot damaged by bomb! Remaining health: {}", new_health);
+                        println!(
+                            "Bot at distance {:.2} damaged by bomb! Damage: {}, Remaining health: {}",
+                            distance, damage, new_health
+                        );
                     }
                 }
             }
