@@ -13,6 +13,7 @@ use fyrox::{
         task::TaskPool,
         type_traits::prelude::*,
         visitor::prelude::*,
+        math::Rect,
     },
     engine::ScriptProcessor,
     event::{ElementState, Event, WindowEvent},
@@ -111,6 +112,7 @@ struct Player {
     bomb_timer: f32,
     last_health: f32,
     heart_pulse_timer: f32,
+    explosion_timer: Option<f32>,
 }
 
 impl Default for Player {
@@ -132,6 +134,7 @@ impl Default for Player {
             bomb_timer: 0.0,
             last_health: 100.0,
             heart_pulse_timer: 0.0,
+            explosion_timer: None,
         }
     }
 }
@@ -369,46 +372,80 @@ impl ScriptTrait for Player {
             let player_pos = context.scene.graph[self.sprite].global_position().xy();
             let bomb_pos = context.scene.graph[bh].global_position().xy();
 
-            if let Some(bomb_node) = context.scene.graph.try_get_mut(bh) {
-                bomb_node
-                    .local_transform_mut()
-                    .set_scale(Vector3::new(bomb_pulse_scale, bomb_pulse_scale, bomb_pulse_scale));
+            // Only pulse if we're *not* in the middle of an explosion
+            if self.explosion_timer.is_none() {
+                let bomb_pulse_scale = 0.7 + 0.05 * (self.heart_pulse_timer * 5.0).sin();
+                if let Some(bomb_node) = context.scene.graph.try_get_mut(bh) {
+                    bomb_node
+                        .local_transform_mut()
+                        .set_scale(Vector3::new(bomb_pulse_scale, bomb_pulse_scale, bomb_pulse_scale));
+                }
             }
 
 
             if (player_pos - bomb_pos).norm() < 1.0 {
-                println!("Bomb exploded!");
+                if self.explosion_timer.is_none() {
+                    println!("Bomb exploded!");
+            
+                    // Change the bomb's texture to explosion.png
+                    let explosion_texture = context.resource_manager.request::<Texture>("data/explosion.png");
+                    if let Some(bomb_node) = context.scene.graph.try_get_mut(bh).and_then(|n| n.cast_mut::<Rectangle>()) {
 
-                if let Some(node) = context.scene.graph.try_get_mut(bh) {
-                    node.set_visibility(false);
-                }
+                        let material = bomb_node.material();
+                        material.data_ref().bind("diffuseTexture", explosion_texture);
+                        
+                        // Adjust the scale of the rectangle to make the texture appear larger
+                        bomb_node
+                        .local_transform_mut()
+                        .set_scale(Vector3::new(3.0, 3.0, 1.0)); // Scale the rectangle (3x larger)
 
-                let bots_to_hit: Vec<_> = context
-                    .scene
-                    .graph
-                    .pair_iter_mut()
-                    .filter_map(|(h, node)| {
-                        let bot_pos = node.global_position().xy();
 
-                        if let Some(bot_script) = node.script_mut(0).and_then(|s| s.cast_mut::<Bot>()) {
-                            if (bot_pos - bomb_pos).norm() <= 5.0 {
-                                println!("Bot found at position: {:?}", bot_pos);
-                                return Some((h, bot_script));
+                    println!("Explosion scale set to: {:?}, UV rect set to full texture.", bomb_node.local_transform().scale());
+                    
+                    context.scene.graph.update_hierarchical_data();
+                    }
+            
+                    // Start the explosion timer
+                    self.explosion_timer = Some(1.0);
+            
+                    // Damage bots within the explosion radius
+                    let explosion_radius = 5.0; // Adjust radius as needed
+                    let bots_to_hit: Vec<_> = context
+                        .scene
+                        .graph
+                        .pair_iter_mut()
+                        .filter_map(|(h, node)| {
+                            let bot_pos = node.global_position().xy();
+            
+                            if let Some(bot_script) = node.script_mut(0).and_then(|s| s.cast_mut::<Bot>()) {
+                                if (bot_pos - bomb_pos).norm() <= explosion_radius {
+                                    println!("Bot found at position: {:?}", bot_pos);
+                                    return Some((h, bot_script));
+                                }
                             }
-                        }
-                        None
-                    })
-                    .collect();
-
-                for (bot_h, bot_script) in bots_to_hit {
-                    let new_health = (bot_script.get_health() - 50.0).max(0.0);
-                    bot_script.set_health(new_health);
-                    println!("Bot damaged by bomb! Remaining health: {}", new_health);
+                            None
+                        })
+                        .collect();
+            
+                    for (bot_h, bot_script) in bots_to_hit {
+                        let new_health = (bot_script.get_health() - 50.0).max(0.0);
+                        bot_script.set_health(new_health);
+                        println!("Bot damaged by bomb! Remaining health: {}", new_health);
+                    }
+                }
+            }
+            
+            // Check if the explosion timer is active and update it
+            if let Some(timer) = &mut self.explosion_timer {
+                *timer -= context.dt;
+                if *timer <= 0.0 {
+                    // Hide the bomb after the timer expires
+                    context.scene.graph[bh].set_visibility(false);
+                    self.explosion_timer = None; // Reset the timer
                 }
             }
         }
-
-                // The script can be assigned to any scene node, but we assert that it will work only with
+        // The script can be assigned to any scene node, but we assert that it will work only with
         // 2d rigid body nodes.
         if let Some(rigid_body) = context.scene.graph[context.handle].cast_mut::<RigidBody>() {
             
