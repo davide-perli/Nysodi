@@ -50,6 +50,7 @@ pub struct Game {
     // ANCHOR: player_field
     player: Handle<Node>,
     // ANCHOR_END: player_field
+    pub total_score: f32,
 }
 
 // ANCHOR: register
@@ -372,7 +373,7 @@ impl ScriptTrait for Player {
             let player_pos = context.scene.graph[self.sprite].global_position().xy();
             let bomb_pos = context.scene.graph[bh].global_position().xy();
 
-            // Only pulse if we're *not* in the middle of an explosion
+            // Only pulse if we're not in the middle of an explosion
             if self.explosion_timer.is_none() {
                 let bomb_pulse_scale = 0.7 + 0.05 * (self.heart_pulse_timer * 5.0).sin();
                 if let Some(bomb_node) = context.scene.graph.try_get_mut(bh) {

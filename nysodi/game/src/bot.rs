@@ -55,7 +55,17 @@ pub struct Bot {
     damage_timer: f32,
     respawn_timer: Option<f32>,
     pending_health_update: Option<f32>,
+
+    reaction_timer: f32,
+    reaction_state: ReactionState,
+    has_reacted: bool,
     // ANCHOR_END: animation_fields
+}
+
+#[derive(Visit, Reflect, Debug, Clone, Copy)]
+enum ReactionState {
+    Motionless,
+    RunningAway,
 }
 
 // ANCHOR: bot_defaults
@@ -76,7 +86,9 @@ impl Default for Bot {
             damage_timer: 0.0,
             respawn_timer: None,
             pending_health_update: None,
-
+            reaction_state: ReactionState::Motionless,
+            reaction_timer: 0.0,
+            has_reacted: false,
         }
     }
 }
@@ -84,6 +96,7 @@ impl Default for Bot {
 
 // ANCHOR: has_ground_in_front
 impl Bot {
+
     pub fn get_health(&self) -> f32 {
         self.health
     }
@@ -106,6 +119,15 @@ impl Bot {
                 local_transform.set_position(Vector3::new((full_width - health_ratio * full_width) / 200.0, local_transform.position().y, local_transform.position().z));
             }
         }
+    }
+
+    pub fn trigger_reaction(&mut self, total_score: f32) {
+        if total_score < 80.0 {
+            self.reaction_state = ReactionState::Motionless;
+        } else {
+            self.reaction_state = ReactionState::RunningAway;
+        }
+        self.reaction_timer = 3.0;
     }
 
     fn locate_target(&mut self, ctx: &mut ScriptContext) {
@@ -200,93 +222,136 @@ impl Bot {
 
 impl ScriptTrait for Bot {
     fn on_update(&mut self, ctx: &mut ScriptContext) {
-        // Apply pending health update if any
+        // 0) Always update target first
+        self.locate_target(ctx);
+
+        // 1) Pending health update & respawn
         if let Some(new_health) = self.pending_health_update.take() {
             self.health = new_health;
             self.update_health_bar(ctx);
+
             if self.health <= 0.0 {
-                if let Some(node) = ctx.scene.graph.try_get_mut(ctx.handle) {
-                    node.set_visibility(false); // Make the bot invisible
-                }
-                println!("Bot defeated!");
-            }
-        }
-        
-        // If the bot is defeated, start the respawn timer
-        if self.health <= 0.0 {
-            if let Some(timer) = &mut self.respawn_timer {
-                *timer += ctx.dt; // Increment the respawn timer
-                if *timer >= 3.0 {
-                    // Respawn the bot after 3 seconds
-                    self.health = self.max_health;
-                    self.respawn_timer = None; // Reset the timer
-                    if let Some(node) = ctx.scene.graph.try_get_mut(ctx.handle) {
-                        node.set_visibility(true); // Make the bot visible again
+                // Respawn timer
+                if self.respawn_timer.is_none() {
+                    // Award points and hide the bot only once
+                    ctx.plugins.get_mut::<Game>().total_score += 10.0;
+                    println!(
+                        "▶ Bot defeated! +10 points — total_score = {}",
+                        ctx.plugins.get::<Game>().total_score
+                    );
+            
+                    if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                        n.set_visibility(false);
                     }
-                    println!("Bot respawned!");
+            
+                    // Initialize the respawn timer
+                    self.respawn_timer = Some(0.0);
+                } else {
+                    // Increment the respawn timer
+                    if let Some(t) = &mut self.respawn_timer {
+                        *t += ctx.dt;
+                        if *t >= 3.0 {
+                            self.health = self.max_health;
+                            self.respawn_timer = None;
+                            self.has_reacted = false; // Reset reaction state
+                            if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                                n.set_visibility(true);
+                            }
+                            println!("▶ Bot respawned!");
+                            self.update_health_bar(ctx);
+                        }
+                    }
                 }
-            } else {
-                // Start the respawn timer if it hasn't started yet
-                self.respawn_timer = Some(0.0);
+                return;
             }
-            return; // Skip the rest of the update logic while the bot is defeated
         }
 
-        self.locate_target(ctx);
+        if self.health <= 0.0 {
+            // Respawn timer
+            if let Some(t) = &mut self.respawn_timer {
+                *t += ctx.dt;
+                if *t >= 3.0 {
+                    self.health = self.max_health;
+                    self.respawn_timer = None;
+                    self.has_reacted = false; // Reset reaction state
+                    if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                        n.set_visibility(true);
+                    }
+                    println!("▶ Bot respawned!");
+                    self.update_health_bar(ctx);
+                }
+            } else {
+                self.respawn_timer = Some(0.0);
+            }
+            return;
+        }
+
+        // 2) Trigger reaction once when score > 50
+        let total_score = ctx.plugins.get::<Game>().total_score;
+
+        if !self.has_reacted && total_score > 50.0 && self.reaction_timer <= 0.0 {
+            self.has_reacted = true;
+            self.trigger_reaction(total_score);
+            println!("▶ Reaction triggered: {:?} for 3s", self.reaction_state);
+        }
+
+        // 3) Handle freeze/flee
+        if self.reaction_timer > 0.0 {
+            self.reaction_timer -= ctx.dt;
+            if self.reaction_timer > 0.0 {
+                let me = ctx.scene.graph[ctx.handle].global_position().xy();
+                let them = ctx.scene.graph[self.target].global_position().xy();
+                match self.reaction_state {
+                    ReactionState::Motionless => {
+                        self.direction = Vector2::zeros();
+                        self.speed.set_value_and_mark_modified(0.0);
+                    }
+                    ReactionState::RunningAway => {
+                        self.direction = (me - them).normalize();
+                        self.speed.set_value_and_mark_modified(2.0);
+                    }
+                }
+                self.do_move(ctx);
+                return;
+            }
+        }
+
+        // 4) Normal chase & move
         self.move_to_target(ctx);
         self.do_move(ctx);
 
-        // Update the bot's health bar
+        // 5) Damage on contact
         self.update_health_bar(ctx);
-
-        // Check if the bot is within a 1-tile radius of the player
-        let player_position = ctx.scene.graph[self.target].global_position().xy();
-        let bot_position = ctx.scene.graph[ctx.handle].global_position().xy();
-        let distance = (player_position - bot_position).norm();
-
-        if distance <= 1.5 {
-            // Increment the damage timer
+        let player_pos = ctx.scene.graph[self.target].global_position().xy();
+        let bot_pos = ctx.scene.graph[ctx.handle].global_position().xy();
+        let dist = (player_pos - bot_pos).norm();
+        if dist <= 1.5 {
             self.damage_timer += ctx.dt;
-        
-            // Deal damage every second
             if self.damage_timer >= 0.75 {
-                // Reduce the player's health by 20
-                let game = ctx.plugins.get::<Game>();
-                if let Some(player) = ctx.scene.graph.try_get_mut(game.player) {
-                    if let Some(player_script) = player
-                        .script_mut(0)
-                        .and_then(|s| s.cast_mut::<Player>()) 
-                    {
-                        // Skip damage logic if the player is already defeated
-                        if player_script.game_over {
-                            return;
-                        }
-        
-                        player_script.health = (player_script.health - 20.0).max(0.0);
-                        println!("Player took damage! Health: {}", player_script.health);
-        
-                        // Check if the player is dead
-                        if player_script.health <= 0.0 {
-                            println!("Player defeated!");
-                            player_script.game_over = true;
+                if let Some(pn) = ctx.scene.graph.try_get_mut(ctx.plugins.get::<Game>().player) {
+                    if let Some(ps) = pn.script_mut(0).and_then(|s| s.cast_mut::<Player>()) {
+                        if !ps.game_over {
+                            ps.health = (ps.health - 20.0).max(0.0);
+                            println!("▶ Player hit! Health = {}", ps.health);
+                            if ps.health <= 0.0 {
+                                ps.game_over = true;
+                                println!("▶ Player defeated!");
+                            }
                         }
                     }
                 }
-        
-                // Reset the damage timer
                 self.damage_timer = 0.0;
             }
         } else {
-            // Reset the damage timer if the bot is not within range
             self.damage_timer = 0.0;
         }
 
+        // 6) Animation update
         if self.direction.x.abs() > 0.0 || self.direction.y.abs() > 0.0 {
             self.current_animation.set_value_and_mark_modified(2);
         } else {
             self.current_animation.set_value_and_mark_modified(0);
         }
-
         if let Some(anim) = self.animations.get_mut(*self.current_animation as usize) {
             anim.update(ctx.dt);
             if let Some(rect) = ctx.scene.graph.try_get_mut(*self.rectangle)
@@ -297,6 +362,7 @@ impl ScriptTrait for Bot {
             }
         }
     }
+
 
     fn on_os_event(&mut self, event: &Event<()>, ctx: &mut ScriptContext) {
         if let Event::WindowEvent { event, .. } = event {
@@ -311,23 +377,13 @@ impl ScriptTrait for Bot {
                             let bot_position = ctx.scene.graph[ctx.handle].global_position().xy();
                             let distance = (player_position - bot_position).norm();
 
+
                             if distance <= 2.0 {
-                                // Reduce bot's health by 10
-                                self.health = (self.health - 10.0).max(0.0);
-                                println!("Bot took damage! Health: {}", self.health);
-
-                                // Update the health bar
-                                self.update_health_bar(ctx);
-
-                                // Check if the bot is dead
-                                if self.health <= 0.0 {
-                                    println!("Bot defeated!");
-                                    // Optionally, deactivate the bot or trigger a death animation
-                                    if let Some(node) = ctx.scene.graph.try_get_mut(ctx.handle) {
-                                        node.set_visibility(false);
-                                    }
-                                }
+                                let new_h = (self.health - 10.0).max(0.0);
+                                self.set_health(new_h);                         // <<< enqueue the change
+                                println!("▶ Bot took damage! Pending health = {}", new_h);
                             }
+
                         }
                         _ => {}
                     }

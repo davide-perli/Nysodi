@@ -489,7 +489,7 @@
         ),
     ),
     scene_settings: {
-        "/home/davide/Documents/Nysodi/nysodi/data/characters/unnamed.rgs": (
+        "data/characters/unnamed.rgs": (
             camera_settings: (
                 position: (0.0, 1.0, 0.0),
                 yaw: 0.0,
@@ -500,22 +500,9 @@
                     z_far: 128.0,
                 )),
             ),
-            node_infos: {
-                (
-                    index: 0,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 42,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-            },
+            node_infos: {},
         ),
-        "data/characters/unnamed.rgs": (
+        "./data/scene.rgs": (
             camera_settings: (
                 position: (0.0, 1.0, 0.0),
                 yaw: 0.0,
@@ -536,16 +523,10 @@
                 projection: Orthographic((
                     z_near: 0.025,
                     z_far: 128.0,
-                    vertical_size: 12.5,
+                    vertical_size: 5.0,
                 )),
             ),
             node_infos: {
-                (
-                    index: 84,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
                 (
                     index: 17,
                     generation: 1,
@@ -553,44 +534,14 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 50,
+                    index: 348,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 49,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 14,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 47,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 12,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 53,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 2,
-                    generation: 1,
+                    index: 66,
+                    generation: 2,
                 ): (
                     is_expanded: true,
                 ),
@@ -601,13 +552,97 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 83,
+                    index: 7,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 53,
                     generation: 2,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 347,
+                    index: 346,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 65,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 14,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 82,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 343,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 52,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 349,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 3,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 52,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 79,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 299,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 67,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 12,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 302,
                     generation: 1,
                 ): (
                     is_expanded: true,
@@ -619,20 +654,50 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 1,
+                    index: 0,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 303,
+                    index: 60,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 47,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 61,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
                     index: 62,
-                    generation: 1,
+                    generation: 3,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 64,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 49,
+                    generation: 6,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 54,
+                    generation: 2,
                 ): (
                     is_expanded: true,
                 ),
@@ -643,44 +708,86 @@
                     is_expanded: true,
                 ),
                 (
+                    index: 51,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 1,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 59,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
                     index: 53,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 299,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 62,
-                    generation: 3,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 52,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 54,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 48,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
                     index: 345,
-                    generation: 2,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 49,
+                    generation: 5,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 49,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 5,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 63,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 50,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 2,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 9,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 54,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 347,
+                    generation: 1,
                 ): (
                     is_expanded: true,
                 ),
@@ -697,91 +804,13 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 5,
+                    index: 55,
                     generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 9,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 61,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 65,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 79,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 3,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 4,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 349,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 0,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 344,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 343,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 82,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 54,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 49,
-                    generation: 6,
                 ): (
                     is_expanded: false,
                 ),
                 (
-                    index: 345,
+                    index: 48,
                     generation: 1,
                 ): (
                     is_expanded: true,
@@ -793,37 +822,7 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 67,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 51,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 66,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 302,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 63,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 6,
+                    index: 4,
                     generation: 1,
                 ): (
                     is_expanded: true,
@@ -841,50 +840,38 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 60,
+                    index: 303,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 59,
+                    index: 344,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 55,
+                    index: 345,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 62,
                     generation: 1,
                 ): (
-                    is_expanded: false,
+                    is_expanded: true,
+                ),
+                (
+                    index: 84,
+                    generation: 2,
+                ): (
+                    is_expanded: true,
                 ),
                 (
                     index: 347,
                     generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 64,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 346,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 52,
-                    generation: 2,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 7,
-                    generation: 1,
                 ): (
                     is_expanded: true,
                 ),
@@ -895,20 +882,20 @@
                     is_expanded: true,
                 ),
                 (
-                    index: 348,
-                    generation: 1,
+                    index: 83,
+                    generation: 2,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 49,
-                    generation: 5,
+                    index: 6,
+                    generation: 1,
                 ): (
                     is_expanded: true,
                 ),
             },
         ),
-        "./data/scene.rgs": (
+        "/home/davide/Documents/Nysodi/nysodi/data/characters/unnamed.rgs": (
             camera_settings: (
                 position: (0.0, 1.0, 0.0),
                 yaw: 0.0,
@@ -919,7 +906,20 @@
                     z_far: 128.0,
                 )),
             ),
-            node_infos: {},
+            node_infos: {
+                (
+                    index: 42,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 0,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+            },
         ),
     },
     recent: (
