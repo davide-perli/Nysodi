@@ -14,6 +14,7 @@ use fyrox::{
         type_traits::prelude::*,
         visitor::prelude::*,
         math::Rect,
+        color::Color,
     },
     engine::ScriptProcessor,
     event::{ElementState, Event, WindowEvent},
@@ -86,74 +87,28 @@ impl Plugin for Game {
             let graph = &mut scene.graph;
             let dt = context.dt;
             self.bot_spawn_timer += dt;
-        
-            // 1) Once, find the Skeleton node in the loaded graph:
-            if self.bot_proto == Handle::NONE {
-                self.bot_proto = graph
+
+            // Only act every 10 seconds
+            if self.bot_spawn_timer >= 10.0 {
+                self.bot_spawn_timer = 0.0;
+
+                // Find the first invisible Skeleton bot
+                if let Some((handle, node)) = graph
                     .pair_iter_mut()
-                    .find_map(|(h, n)| if n.name() == "Skeleton" { Some(h) } else { None })
-                    .expect("Scene must contain a node named \"Skeleton\"");
-            }
-        
-            // Count current bots
-            let bot_count = graph
-                .pair_iter_mut()
-                .filter(|(_, node)| node.name().starts_with("Skeleton")) // without the visibility check I prevent over-spawn
-                .count();
-        
-            //println!("Timer: {}, Bot count: {}", self.bot_spawn_timer, bot_count);
-            // 2) Every 10s, clone it, but only if less than 5 bots exist:
-            if self.bot_spawn_timer >= 10.0 && bot_count < 5 {
-                self.bot_spawn_timer -= 10.0;
-            
-                // 1) Pick a random spot:
-                let mut rng = rand::thread_rng();
-                let x = rng.gen_range(-11.0..=11.0);
-                let y = rng.gen_range(-4.0..=17.0);
-            
-                // 2) Prepare a mutable filter closure:
-                let mut include_all = |_: Handle<Node>, _: &Node| true;
-            
-                // 3) Clone into `graph` in-place:
-                let (new_root, _handle_map) =
-                    graph.copy_node_inplace(self.bot_proto, &mut include_all);
-                graph[new_root].set_visibility(true);
-            
-                // 4) Reposition & zero‐out physics:
-                if let Some(node) = graph.try_get_mut(new_root) {
-                    node.local_transform_mut().set_position(Vector3::new(x, y, 0.0));
-                    if let Some(rb) = node.cast_mut::<RigidBody>() {
-                        rb.set_lin_vel(Vector2::default());
-                        rb.set_ang_vel(0.0);
-                    }
+                    .find(|(_, node)| node.name().starts_with("Skeleton") && !node.visibility())
+                {
+                    // let position = node.global_position();
+                    // let x = position.x;
+                    // let y = position.y;
+                    node.local_transform_mut().set_position(Vector3::new(0.0, 0.0, 0.0));
+                    
+                    node.set_visibility(true); // Make the bot visible
                 }
-                
-                // 5) Create a health bar node for this bot
-                let health_bar = RectangleBuilder::new(
-                    BaseBuilder::new()
-                        .with_local_transform(
-                            TransformBuilder::new()
-                                .with_local_position(Vector3::new(x, y + 1.0, 0.0)) // Offset above bot
-                                .with_local_scale(Vector3::new(1.0, 0.1, 1.0))
-                                .build(),
-                        ),
-                )
-                .build(graph);
-
-                // 6) Hook up your script and assign the health bar handle
-                let mut bot_script = Bot::default();
-                bot_script.set_health_fill_handle(health_bar); // Use your setter method
-                graph[new_root].add_script(bot_script);
-
-                // 7) Give each bot a unique name
-                let bot_name = format!("Skeleton{}", bot_count);
-                graph[new_root].set_name(&bot_name);
-            
-                println!("Spawned physics‐driven bot at: ({:.2}, {:.2})", x, y);
             }
-            
-        }        
+        }
     }
+
+
 }
 
 

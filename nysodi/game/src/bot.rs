@@ -26,6 +26,7 @@ use fyrox::{
     event::{ElementState, Event, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
     gui::texture::Texture,
+    rand::{self, Rng},
 };
 // ANCHOR_END: imports
 
@@ -154,46 +155,57 @@ impl Bot {
     }
 
     fn move_to_target(&mut self, ctx: &mut ScriptContext) {
-        // Calculate the target position and the bot's position
-        let tp = ctx.scene.graph[self.target].global_position().xy();
-        let sp = ctx.scene.graph[ctx.handle].global_position().xy();
-        let delta = tp - sp;
-        let dist = (delta.x.powi(2) + delta.y.powi(2)).sqrt();
+        // Move only if the bot is visible
+        if ctx.scene.graph[ctx.handle].visibility() {
+            // Calculate the target position and the bot's position
+            let tp = ctx.scene.graph[self.target].global_position().xy();
+            let sp = ctx.scene.graph[ctx.handle].global_position().xy();
+            let delta = tp - sp;
+            let dist = (delta.x.powi(2) + delta.y.powi(2)).sqrt();
 
-        // Adjust direction and speed based on distance
-        if dist > 1.1 {
-            self.direction = delta / dist;
-            self.speed.set_value_and_mark_modified(1.2);
-        } else {
-            self.direction = Vector2::new(0.0, 0.0);
-            self.speed.set_value_and_mark_modified(0.0);
+            // Adjust direction and speed based on distance
+            if dist > 1.1 {
+                self.direction = delta / dist;
+                self.speed.set_value_and_mark_modified(1.2);
+            } else {
+                self.direction = Vector2::new(0.0, 0.0);
+                self.speed.set_value_and_mark_modified(0.0);
+            }
         }
     }
     // ANCHOR_END: search_target
 
     /// Apply velocity to the bot's RigidBody2D and flip sprite to always face player
     fn do_move(&mut self, ctx: &mut ScriptContext) {
-        // Set movement velocity
-        if let Some(rb) = ctx.scene.graph.try_get_mut_of_type::<RigidBody>(ctx.handle) {
-            let vel = Vector2::new(
-                self.direction.x * *self.speed,
-                self.direction.y * *self.speed,
-            );
-            rb.set_lin_vel(vel);
-        }
-        // Compute direction to face player
-        let tp_x = ctx.scene.graph[self.target].global_position().x;
-        let sp_x = ctx.scene.graph[ctx.handle].global_position().x;
-        let flip = (tp_x - sp_x).signum();
-        // Invert flip if sprite's default orientation is opposite
-        let scale_x = -flip;
-        // Apply sprite flip
-        if let Some(rect_node) = ctx.scene.graph.try_get_mut(*self.rectangle) {
-            rect_node.local_transform_mut().set_scale(Vector3::new(
-                2.0 * scale_x,
-                2.0,
-                1.0,
-            )); 
+        // Move only if the bot is visible
+        if ctx.scene.graph[ctx.handle].visibility() {
+            // Set movement velocity
+            if let Some(rb) = ctx.scene.graph.try_get_mut_of_type::<RigidBody>(ctx.handle) {
+                let vel = Vector2::new(
+                    self.direction.x * *self.speed,
+                    self.direction.y * *self.speed,
+                );
+                rb.set_lin_vel(vel);
+            }
+            // Compute direction to face player
+            let tp_x = ctx.scene.graph[self.target].global_position().x;
+            let sp_x = ctx.scene.graph[ctx.handle].global_position().x;
+            let flip = (tp_x - sp_x).signum();
+            // Invert flip if sprite's default orientation is opposite
+            let scale_x = -flip;
+            // Apply sprite flip
+            if let Some(rect_node) = ctx.scene.graph.try_get_mut(*self.rectangle) {
+                rect_node.local_transform_mut().set_scale(Vector3::new(
+                    2.0 * scale_x,
+                    2.0,
+                    1.0,
+                )); 
+            }
+        } else {
+            // If the bot is not visible, set its velocity to zero
+            if let Some(rb) = ctx.scene.graph.try_get_mut_of_type::<RigidBody>(ctx.handle) {
+                rb.set_lin_vel(Vector2::new(0.0, 0.0));
+            }
         }
     }
     // ANCHOR_END: do_move
@@ -362,11 +374,28 @@ impl ScriptTrait for Bot {
                     self.respawn_timer = None;
                     self.has_reacted = false; // Reset reaction state
                     if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                        let mut rng = rand::thread_rng();
+                        let offset_x: f32 = rng.gen_range(-5.0..=5.0);
+                        let offset_y: f32 = rng.gen_range(-5.0..=5.0);
+
+                        let mut position = Vector2::new(offset_x, offset_y);
+                        position.x = position.x.clamp(-11.0, 11.0);
+                        position.y = position.y.clamp(-4.0, 17.0);
+
+                        // Set new random position near the player
+                        n.local_transform_mut().set_position(Vector3::new(position.x, position.y, 0.0));
+                        n.set_visibility(true);
+
+                        println!(
+                            "▶ {:?} respawned at ({:.2}, {:.2})",
+                            n.name(),
+                            position.x,
+                            position.y
+                        );
+                        //n.local_transform_mut().set_position(Vector3::new(0.0, 0.0, 0.0));
                         n.set_visibility(true);
                     }
-                    if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
-                        println!("▶ {} respawned!", bot_node.name());
-                    }
+                    
                     self.update_health_bar(ctx);
                 }
             } else {
@@ -421,22 +450,30 @@ impl ScriptTrait for Bot {
         let player_pos = ctx.scene.graph[self.target].global_position().xy();
         let bot_pos = ctx.scene.graph[ctx.handle].global_position().xy();
         let dist = (player_pos - bot_pos).norm();
+        // Check if the bot's visibility is set to true before allowing damage
         if dist <= 1.5 {
-            self.damage_timer += ctx.dt;
-            if self.damage_timer >= 0.75 {
-                if let Some(pn) = ctx.scene.graph.try_get_mut(ctx.plugins.get::<Game>().player) {
-                    if let Some(ps) = pn.script_mut(0).and_then(|s| s.cast_mut::<Player>()) {
-                        if !ps.game_over {
-                            ps.health = (ps.health - 20.0).max(0.0);
-                            println!("▶ Player hit! Health = {}", ps.health);
-                            if ps.health <= 0.0 {
-                                ps.game_over = true;
-                                println!("▶ Player defeated!");
+            if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                // Ensure that bot visibility is true (Option<bool> to bool comparison)
+                if bot_node.visibility() == true {
+                    self.damage_timer += ctx.dt;
+                    if self.damage_timer >= 0.75 {
+                        if let Some(pn) = ctx.scene.graph.try_get_mut(ctx.plugins.get::<Game>().player) {
+                            if let Some(ps) = pn.script_mut(0).and_then(|s| s.cast_mut::<Player>()) {
+                                if !ps.game_over {
+                                    ps.health = (ps.health - 20.0).max(0.0);
+                                    println!("▶ Player hit! Health = {}", ps.health);
+                                    if ps.health <= 0.0 {
+                                        ps.game_over = true;
+                                        println!("▶ Player defeated!");
+                                    }
+                                }
                             }
                         }
+                        self.damage_timer = 0.0;
                     }
+                } else {
+                    println!("▶ Bot is not visible, no damage dealt to the Player.");
                 }
-                self.damage_timer = 0.0;
             }
         } else {
             self.damage_timer = 0.0;
@@ -500,7 +537,7 @@ impl ScriptTrait for Bot {
             .filter(|(_, node)| node.name() == "TargetItem")
             .count();
 
-        println!("▶ Number of target item nodes in scene graph: {}", target_count);
+        //println!("▶ Number of target item nodes in scene graph: {}", target_count);
 
     }
 
@@ -519,44 +556,59 @@ impl ScriptTrait for Bot {
                             let bot_position = ctx.scene.graph[ctx.handle].global_position().xy();
                             let distance = (player_position - bot_position).norm();
 
-
                             if distance <= 2.0 {
-                                let new_h = (self.health - 10.0).max(0.0);
-                                self.set_health(new_h);                         // <<< enqueue the change
-                                if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
-                                    println!(
-                                        "▶ {} took damage! Pending health = {}",
-                                        bot_node.name(),
-                                        new_h
-                                    );
-                                    if let Some(target) = &self.target_handle {
-                                        if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
-                                            target_node.set_visibility(true);
-                                            println!("Target sprite visible at position: {:?}", target_node.global_position().xy());
+                                // Check if the player is not in a game over state
+                                let mut game = ctx.plugins.get_mut::<Game>();
+                                if let Some(pn) = ctx.scene.graph.try_get_mut(ctx.plugins.get::<Game>().player) {
+                                    if let Some(ps) = pn.script_mut(0).and_then(|s| s.cast_mut::<Player>()) {
+                                        if !ps.game_over {
+                                            if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                                                // Ensure that bot visibility is true (Option<bool> to bool comparison)
+                                                if bot_node.visibility() == true {
+                                                    // The game is still going, so we update the bot's health
+                                                    let new_h = (self.health - 10.0).max(0.0);
+                                                    self.set_health(new_h); // <<< Enqueue the change
+                                                    println!(
+                                                        "▶ {} took damage! Pending health = {}",
+                                                        bot_node.name(),
+                                                        new_h
+                                                    );
+                                                    if let Some(target) = &self.target_handle {
+                                                        if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
+                                                            target_node.set_visibility(true);
+                                                            println!("Target sprite visible at position: {:?}", target_node.global_position().xy());
+                                                        }
+                                                    }
+                                                    let bot_position = ctx.scene.graph[ctx.handle].global_position();
+
+                                                    let target_item_handle = ctx
+                                                        .scene
+                                                        .graph
+                                                        .pair_iter_mut()
+                                                        .find(|(_, node)| {
+                                                            node.name() == "TargetItem"
+                                                                && node.visibility()
+                                                                && (node.global_position() - bot_position).norm_squared() < f32::EPSILON
+                                                        })
+                                                        .map(|(handle, _)| handle);
+
+                                                    // If there is no existing target item, create one
+                                                    if target_item_handle.is_none() {
+                                                        // Create target item sprite (similar to spawn_target_sprite function)
+                                                        let target_item = self.spawn_target_sprite(ctx);
+                                                        self.target_handle = Some(target_item);
+                                                        println!("▶ Target item spawned at position: {:?}", ctx.scene.graph[target_item].global_position().xy());
+                                                    }
+                                                } else {
+                                                    println!("▶ Bot is not visible, no damage dealt to the Bot.");
+                                                }
+                                            }
+                                        } else {
+                                            println!("Player is in game over state, no health change.");
                                         }
                                     }
                                 }
-
-                                let bot_position = ctx.scene.graph[ctx.handle].global_position();
-
-                                let target_item_handle = ctx
-                                    .scene
-                                    .graph
-                                    .pair_iter_mut()
-                                    .find(|(_, node)| {
-                                        node.name() == "TargetItem"
-                                            && node.visibility()
-                                            && (node.global_position() - bot_position).norm_squared() < f32::EPSILON
-                                    })
-                                    .map(|(handle, _)| handle);
-
-                                // If there is no existing target item, create one
-                                if target_item_handle.is_none() {
-                                    // Create target item sprite (similar to spawn_target_sprite function)
-                                    let target_item = self.spawn_target_sprite(ctx);
-                                    self.target_handle = Some(target_item);
-                                    println!("▶ Target item spawned at position: {:?}", ctx.scene.graph[target_item].global_position().xy());
-                                }
+                                
                             }
                             if released {
                                 // Shift is released — delete the target node
