@@ -14,6 +14,7 @@ use fyrox::{
         type_traits::prelude::*,
         visitor::prelude::*,
         math::Rect,
+        color::Color,
     },
     engine::ScriptProcessor,
     event::{ElementState, Event, WindowEvent},
@@ -27,6 +28,7 @@ use fyrox::{
             rectangle::{Rectangle, RectangleBuilder},
             rigidbody::{RigidBody, RigidBodyBuilder},
         },
+        graph::Graph,
         node::Node,
         transform::TransformBuilder,
         Scene,
@@ -40,31 +42,29 @@ use fyrox::{
     },
     asset::manager::ResourceManager,
 };
-use std::{path::Path, sync::Arc};
+use std::{path::Path, ptr::null_mut};
 // ANCHOR_END: imports
 
 #[derive(Visit, Reflect, Debug, Default)]
 pub struct Game {
     scene: Handle<Scene>,
-
-    // ANCHOR: player_field
     player: Handle<Node>,
-    // ANCHOR_END: player_field
     pub total_score: f32,
+    #[visit(optional)] #[reflect(hidden)]
+    bot_spawn_timer: f32,
+    #[visit(optional)] #[reflect(hidden)]
+    bot_proto: Handle<Node>,
 }
 
-// ANCHOR: register
 impl Plugin for Game {
-    fn register(&self, context: PluginRegistrationContext) {
-        let script_constructors = &context.serialization_context.script_constructors;
-        script_constructors.add::<Player>("Player");
-        script_constructors.add::<Bot>("Bot");
+    fn register(&self, ctx: PluginRegistrationContext) {
+        let ctors = &ctx.serialization_context.script_constructors;
+        ctors.add::<crate::Player>("Player");
+        ctors.add::<Bot>("Bot");
     }
 
-    fn init(&mut self, scene_path: Option<&str>, context: PluginContext) {
-        context
-            .async_scene_loader
-            .request(scene_path.unwrap_or("data/scene.rgs"));
+    fn init(&mut self, scene_path: Option<&str>, ctx: PluginContext) {
+        ctx.async_scene_loader.request(scene_path.unwrap_or("data/scene.rgs"));
     }
 
     fn on_scene_loaded(
@@ -77,16 +77,41 @@ impl Plugin for Game {
         if self.scene.is_some() {
             context.scenes.remove(self.scene);
         }
-
         self.scene = scene;
+        self.bot_spawn_timer = 0.0;
+
     }
 
     fn update(&mut self, context: &mut PluginContext) {
         if let Some(scene) = context.scenes.try_get_mut(self.scene) {
-            scene.drawing_context.clear_lines();
+            let graph = &mut scene.graph;
+            let dt = context.dt;
+            self.bot_spawn_timer += dt;
+
+            // Only act every 10 seconds
+            if self.bot_spawn_timer >= 10.0 {
+                self.bot_spawn_timer = 0.0;
+
+                // Find the first invisible Skeleton bot
+                if let Some((handle, node)) = graph
+                    .pair_iter_mut()
+                    .find(|(_, node)| node.name().starts_with("Skeleton") && !node.visibility())
+                {
+                    // let position = node.global_position();
+                    // let x = position.x;
+                    // let y = position.y;
+                    node.local_transform_mut().set_position(Vector3::new(0.0, 0.0, 0.0));
+                    
+                    node.set_visibility(true); // Make the bot visible
+                }
+            }
         }
     }
+
+
 }
+
+
 
 // ANCHOR: sprite_field
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
@@ -114,6 +139,8 @@ struct Player {
     last_health: f32,
     heart_pulse_timer: f32,
     explosion_timer: Option<f32>,
+
+    pub has_printed_game_over: bool,
 }
 
 impl Default for Player {
@@ -136,6 +163,7 @@ impl Default for Player {
             last_health: 100.0,
             heart_pulse_timer: 0.0,
             explosion_timer: None,
+            has_printed_game_over: false,
         }
     }
 }
@@ -256,6 +284,7 @@ impl ScriptTrait for Player {
                             // Reset health to max when R is pressed
                             self.health = self.max_health;
                             self.game_over = false; // Reset game over state
+                            self.has_printed_game_over = false;
                             // Reset the player's position to the starting point
                             if let Some(node) = context.scene.graph.try_get_mut(context.handle) {
                                 node.local_transform_mut().set_position(Vector3::new(
@@ -281,9 +310,12 @@ impl ScriptTrait for Player {
     fn on_update(&mut self, context: &mut ScriptContext) {
         self.update_health_bar(context);
 
-        if self.health <= 0.0 {
+        // Check if health is 0 or below and print the "Game Over" message only once
+        if self.health <= 0.0 && !self.has_printed_game_over {
             self.game_over = true;
-            println!("Game Over! Press R to Restart or Esc to Exit.");
+            self.has_printed_game_over = true; // Mark that the message has been printed
+            // Print the game over message once
+            println!("❤︎❤︎❤︎ Game Over! Press R to Restart or Esc to Exit.");
             return;
         }
 
@@ -548,12 +580,6 @@ impl ScriptTrait for Player {
         // ANCHOR: health_bar
         // println!("Player health: {}", self.health);
         self.update_health_bar(context);
-
-        if self.health <= 0.0 {
-            self.game_over = true;
-            println!("Game Over! Press R to Restart or Esc to Exit.");
-            return;
-        }
 
         // ANCHOR: on_update_closing
         
