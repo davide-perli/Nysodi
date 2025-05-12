@@ -20,8 +20,8 @@ use fyrox::{
         rigidbody::RigidBodyType,
     },
     script::{ScriptContext, ScriptTrait},
-    event::{ElementState, Event, WindowEvent}, // Added imports
-    keyboard::{KeyCode, PhysicalKey},         // Added imports
+    event::{ElementState, Event, WindowEvent},
+    keyboard::{KeyCode, PhysicalKey},
 };
 // ANCHOR_END: imports
 
@@ -130,17 +130,23 @@ impl Bot {
         self.reaction_timer = 3.0;
     }
 
+    pub fn set_animations(&mut self, animations: Vec<SpriteSheetAnimation>) {
+        self.animations = animations;
+    }
+
     fn locate_target(&mut self, ctx: &mut ScriptContext) {
         let game = ctx.plugins.get::<Game>();
         self.target = game.player;
     }
 
     fn move_to_target(&mut self, ctx: &mut ScriptContext) {
-        // 2D chase towards player
+        // Calculate the target position and the bot's position
         let tp = ctx.scene.graph[self.target].global_position().xy();
         let sp = ctx.scene.graph[ctx.handle].global_position().xy();
         let delta = tp - sp;
         let dist = (delta.x.powi(2) + delta.y.powi(2)).sqrt();
+
+        // Adjust direction and speed based on distance
         if dist > 1.1 {
             self.direction = delta / dist;
             self.speed.set_value_and_mark_modified(1.2);
@@ -221,13 +227,23 @@ impl Bot {
 }
 
 impl ScriptTrait for Bot {
+    fn on_start(&mut self, ctx: &mut ScriptContext) {
+        // Locate the player as the target
+        self.locate_target(ctx);
+
+        // Initialize health bar or other visual elements if needed
+        self.update_health_bar(ctx);
+
+        println!("Bot initialized with target: {:?}", self.target);
+    }
+    
     fn on_update(&mut self, ctx: &mut ScriptContext) {
         // 0) Always update target first
         self.locate_target(ctx);
 
         // 1) Pending health update & respawn
         if let Some(new_health) = self.pending_health_update.take() {
-            self.health = new_health;
+            self.set_health(new_health);
             self.update_health_bar(ctx);
 
             if self.health <= 0.0 {
@@ -271,7 +287,7 @@ impl ScriptTrait for Bot {
             if let Some(t) = &mut self.respawn_timer {
                 *t += ctx.dt;
                 if *t >= 3.0 {
-                    self.health = self.max_health;
+                    self.set_health(self.max_health);
                     self.respawn_timer = None;
                     self.has_reacted = false; // Reset reaction state
                     if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {

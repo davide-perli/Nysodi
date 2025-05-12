@@ -27,6 +27,7 @@ use fyrox::{
             rectangle::{Rectangle, RectangleBuilder},
             rigidbody::{RigidBody, RigidBodyBuilder},
         },
+        graph::Graph,
         node::Node,
         transform::TransformBuilder,
         Scene,
@@ -40,20 +41,23 @@ use fyrox::{
     },
     asset::manager::ResourceManager,
 };
-use std::{path::Path, sync::Arc};
+use std::{path::Path, ptr::null_mut};
 // ANCHOR_END: imports
 
 #[derive(Visit, Reflect, Debug, Default)]
 pub struct Game {
     scene: Handle<Scene>,
-
+    
     // ANCHOR: player_field
     player: Handle<Node>,
-    // ANCHOR_END: player_field
+        // ANCHOR_END: player_field
     pub total_score: f32,
+    #[visit(optional)] #[reflect(hidden)]
+    bot_spawn_timer: f32,
+    #[visit(optional)] #[reflect(hidden)]
+    bot_proto: Handle<Node>,
 }
 
-// ANCHOR: register
 impl Plugin for Game {
     fn register(&self, context: PluginRegistrationContext) {
         let script_constructors = &context.serialization_context.script_constructors;
@@ -61,6 +65,9 @@ impl Plugin for Game {
         script_constructors.add::<Bot>("Bot");
     }
 
+    // fn init(&mut self, scene_path: Option<&str>, ctx: PluginContext) {
+    //     ctx.async_scene_loader.request(scene_path.unwrap_or("data/scene.rgs"));
+    // }
     fn init(&mut self, scene_path: Option<&str>, context: PluginContext) {
         context
             .async_scene_loader
@@ -77,16 +84,62 @@ impl Plugin for Game {
         if self.scene.is_some() {
             context.scenes.remove(self.scene);
         }
-
         self.scene = scene;
+        self.bot_spawn_timer = 0.0;
+
     }
 
     fn update(&mut self, context: &mut PluginContext) {
         if let Some(scene) = context.scenes.try_get_mut(self.scene) {
-            scene.drawing_context.clear_lines();
-        }
+            let graph = &mut scene.graph;
+            let dt = context.dt;
+            self.bot_spawn_timer += dt;
+        
+            // 1) Once, find the Skeleton node in the loaded graph:
+            if self.bot_proto == Handle::NONE {
+                self.bot_proto = graph
+                    .pair_iter_mut()
+                    .find_map(|(h, n)| if n.name() == "Skeleton" { Some(h) } else { None })
+                    .expect("Scene must contain a node named \"Skeleton\"");
+            }
+        
+            // 2) Every 10s, clone it:
+            if self.bot_spawn_timer >= 10.0 {
+                self.bot_spawn_timer -= 10.0;
+            
+                // 1) Pick a random spot:
+                let mut rng = rand::thread_rng();
+                let x = rng.gen_range(-11.0..=11.0);
+                let y = rng.gen_range(-4.0..=17.0);
+            
+                // 2) Prepare a mutable filter closure:
+                let mut include_all = |_: Handle<Node>, _: &Node| true;
+            
+                // 3) Clone into `graph` in-place:
+                let (new_root, _handle_map) =
+                    graph.copy_node_inplace(self.bot_proto, &mut include_all);
+            
+                // 4) Reposition & zero‐out physics:
+                if let Some(node) = graph.try_get_mut(new_root) {
+                    node.local_transform_mut().set_position(Vector3::new(x, y, 0.0));
+                    if let Some(rb) = node.cast_mut::<RigidBody>() {
+                        rb.set_lin_vel(Vector2::default());
+                        rb.set_ang_vel(0.0);
+                    }
+                }
+            
+                // 5) Hook up your script:
+                graph[new_root].add_script(Bot::default());
+                graph[new_root].set_name("Bot");
+            
+                println!("Spawned physics‐driven bot at: ({:.2}, {:.2})", x, y);
+            }
+            
+        }        
     }
 }
+
+
 
 // ANCHOR: sprite_field
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
