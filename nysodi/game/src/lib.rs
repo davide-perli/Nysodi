@@ -41,7 +41,7 @@ use fyrox::{
     },
     asset::manager::ResourceManager,
 };
-use std::{path::Path, sync::Arc};
+use std::{path::Path, ptr::null_mut};
 // ANCHOR_END: imports
 
 #[derive(Visit, Reflect, Debug, Default)]
@@ -78,10 +78,15 @@ impl Plugin for Game {
         }
         self.scene = scene;
         self.bot_spawn_timer = 0.0;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 12406420b884bd53db690eec2dc528f19bb8f373
     }
 
     fn update(&mut self, context: &mut PluginContext) {
         if let Some(scene) = context.scenes.try_get_mut(self.scene) {
+<<<<<<< HEAD
             scene.drawing_context.clear_lines();
             // Use context.dt for delta time
             let dt = context.dt;
@@ -122,6 +127,78 @@ impl Plugin for Game {
                 println!("Spawned bot at: ({:.2}, {:.2})", x, y);
             }
         }
+=======
+            let graph = &mut scene.graph;
+            let dt = context.dt;
+            self.bot_spawn_timer += dt;
+        
+            // 1) Once, find the Skeleton node in the loaded graph:
+            if self.bot_proto == Handle::NONE {
+                self.bot_proto = graph
+                    .pair_iter_mut()
+                    .find_map(|(h, n)| if n.name() == "Skeleton" { Some(h) } else { None })
+                    .expect("Scene must contain a node named \"Skeleton\"");
+            }
+        
+            // Count current bots
+            let bot_count = graph
+                .pair_iter_mut()
+                .filter(|(_, node)| node.name().starts_with("Skeleton")) // without the visibility check I prevent over-spawn
+                .count();
+        
+            //println!("Timer: {}, Bot count: {}", self.bot_spawn_timer, bot_count);
+            // 2) Every 10s, clone it, but only if less than 5 bots exist:
+            if self.bot_spawn_timer >= 10.0 && bot_count < 5 {
+                self.bot_spawn_timer -= 10.0;
+            
+                // 1) Pick a random spot:
+                let mut rng = rand::thread_rng();
+                let x = rng.gen_range(-11.0..=11.0);
+                let y = rng.gen_range(-4.0..=17.0);
+            
+                // 2) Prepare a mutable filter closure:
+                let mut include_all = |_: Handle<Node>, _: &Node| true;
+            
+                // 3) Clone into `graph` in-place:
+                let (new_root, _handle_map) =
+                    graph.copy_node_inplace(self.bot_proto, &mut include_all);
+                graph[new_root].set_visibility(true);
+            
+                // 4) Reposition & zero‐out physics:
+                if let Some(node) = graph.try_get_mut(new_root) {
+                    node.local_transform_mut().set_position(Vector3::new(x, y, 0.0));
+                    if let Some(rb) = node.cast_mut::<RigidBody>() {
+                        rb.set_lin_vel(Vector2::default());
+                        rb.set_ang_vel(0.0);
+                    }
+                }
+                
+                // 5) Create a health bar node for this bot
+                let health_bar = RectangleBuilder::new(
+                    BaseBuilder::new()
+                        .with_local_transform(
+                            TransformBuilder::new()
+                                .with_local_position(Vector3::new(x, y + 1.0, 0.0)) // Offset above bot
+                                .with_local_scale(Vector3::new(1.0, 0.1, 1.0))
+                                .build(),
+                        ),
+                )
+                .build(graph);
+
+                // 6) Hook up your script and assign the health bar handle
+                let mut bot_script = Bot::default();
+                bot_script.set_health_fill_handle(health_bar); // Use your setter method
+                graph[new_root].add_script(bot_script);
+
+                // 7) Give each bot a unique name
+                let bot_name = format!("Skeleton{}", bot_count);
+                graph[new_root].set_name(&bot_name);
+            
+                println!("Spawned physics‐driven bot at: ({:.2}, {:.2})", x, y);
+            }
+            
+        }        
+>>>>>>> 12406420b884bd53db690eec2dc528f19bb8f373
     }
 }
 
@@ -153,6 +230,8 @@ struct Player {
     last_health: f32,
     heart_pulse_timer: f32,
     explosion_timer: Option<f32>,
+
+    pub has_printed_game_over: bool,
 }
 
 impl Default for Player {
@@ -175,6 +254,7 @@ impl Default for Player {
             last_health: 100.0,
             heart_pulse_timer: 0.0,
             explosion_timer: None,
+            has_printed_game_over: false,
         }
     }
 }
@@ -295,6 +375,7 @@ impl ScriptTrait for Player {
                             // Reset health to max when R is pressed
                             self.health = self.max_health;
                             self.game_over = false; // Reset game over state
+                            self.has_printed_game_over = false;
                             // Reset the player's position to the starting point
                             if let Some(node) = context.scene.graph.try_get_mut(context.handle) {
                                 node.local_transform_mut().set_position(Vector3::new(
@@ -320,9 +401,12 @@ impl ScriptTrait for Player {
     fn on_update(&mut self, context: &mut ScriptContext) {
         self.update_health_bar(context);
 
-        if self.health <= 0.0 {
+        // Check if health is 0 or below and print the "Game Over" message only once
+        if self.health <= 0.0 && !self.has_printed_game_over {
             self.game_over = true;
-            println!("Game Over! Press R to Restart or Esc to Exit.");
+            self.has_printed_game_over = true; // Mark that the message has been printed
+            // Print the game over message once
+            println!("❤︎❤︎❤︎ Game Over! Press R to Restart or Esc to Exit.");
             return;
         }
 
@@ -587,12 +671,6 @@ impl ScriptTrait for Player {
         // ANCHOR: health_bar
         // println!("Player health: {}", self.health);
         self.update_health_bar(context);
-
-        if self.health <= 0.0 {
-            self.game_over = true;
-            println!("Game Over! Press R to Restart or Esc to Exit.");
-            return;
-        }
 
         // ANCHOR: on_update_closing
         
