@@ -130,17 +130,23 @@ impl Bot {
         self.reaction_timer = 3.0;
     }
 
+    pub fn set_animations(&mut self, animations: Vec<SpriteSheetAnimation>) {
+        self.animations = animations;
+    }
+
     fn locate_target(&mut self, ctx: &mut ScriptContext) {
         let game = ctx.plugins.get::<Game>();
         self.target = game.player;
     }
 
     fn move_to_target(&mut self, ctx: &mut ScriptContext) {
-        // 2D chase towards player
+        // Calculate the target position and the bot's position
         let tp = ctx.scene.graph[self.target].global_position().xy();
         let sp = ctx.scene.graph[ctx.handle].global_position().xy();
         let delta = tp - sp;
         let dist = (delta.x.powi(2) + delta.y.powi(2)).sqrt();
+
+        // Adjust direction and speed based on distance
         if dist > 1.1 {
             self.direction = delta / dist;
             self.speed.set_value_and_mark_modified(1.2);
@@ -221,6 +227,16 @@ impl Bot {
 }
 
 impl ScriptTrait for Bot {
+    fn on_start(&mut self, ctx: &mut ScriptContext) {
+        // Locate the player as the target
+        self.locate_target(ctx);
+
+        // Initialize health bar or other visual elements if needed
+        self.update_health_bar(ctx);
+
+        println!("Bot initialized with target: {:?}", self.target);
+    }
+    
     fn on_update(&mut self, ctx: &mut ScriptContext) {
         // 0) Always update target first
         self.locate_target(ctx);
@@ -295,7 +311,6 @@ impl ScriptTrait for Bot {
             println!("▶ Reaction triggered: {:?} for 3s", self.reaction_state);
         }
 
-        // 3) Handle freeze/flee
         if self.reaction_timer > 0.0 {
             self.reaction_timer -= ctx.dt;
             if self.reaction_timer > 0.0 {

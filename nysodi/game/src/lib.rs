@@ -27,6 +27,7 @@ use fyrox::{
             rectangle::{Rectangle, RectangleBuilder},
             rigidbody::{RigidBody, RigidBodyBuilder},
         },
+        graph::Graph,
         node::Node,
         transform::TransformBuilder,
         Scene,
@@ -46,25 +47,23 @@ use std::{path::Path, sync::Arc};
 #[derive(Visit, Reflect, Debug, Default)]
 pub struct Game {
     scene: Handle<Scene>,
-
-    // ANCHOR: player_field
     player: Handle<Node>,
-    // ANCHOR_END: player_field
     pub total_score: f32,
+    #[visit(optional)] #[reflect(hidden)]
+    bot_spawn_timer: f32,
+    #[visit(optional)] #[reflect(hidden)]
+    bot_proto: Handle<Node>,
 }
 
-// ANCHOR: register
 impl Plugin for Game {
-    fn register(&self, context: PluginRegistrationContext) {
-        let script_constructors = &context.serialization_context.script_constructors;
-        script_constructors.add::<Player>("Player");
-        script_constructors.add::<Bot>("Bot");
+    fn register(&self, ctx: PluginRegistrationContext) {
+        let ctors = &ctx.serialization_context.script_constructors;
+        ctors.add::<crate::Player>("Player");
+        ctors.add::<Bot>("Bot");
     }
 
-    fn init(&mut self, scene_path: Option<&str>, context: PluginContext) {
-        context
-            .async_scene_loader
-            .request(scene_path.unwrap_or("data/scene.rgs"));
+    fn init(&mut self, scene_path: Option<&str>, ctx: PluginContext) {
+        ctx.async_scene_loader.request(scene_path.unwrap_or("data/scene.rgs"));
     }
 
     fn on_scene_loaded(
@@ -77,16 +76,56 @@ impl Plugin for Game {
         if self.scene.is_some() {
             context.scenes.remove(self.scene);
         }
-
         self.scene = scene;
+        self.bot_spawn_timer = 0.0;
     }
 
     fn update(&mut self, context: &mut PluginContext) {
         if let Some(scene) = context.scenes.try_get_mut(self.scene) {
             scene.drawing_context.clear_lines();
+            // Use context.dt for delta time
+            let dt = context.dt;
+            self.bot_spawn_timer += dt;
+            if self.bot_spawn_timer >= 10.0 {
+                self.bot_spawn_timer -= 10.0;
+                let mut rng = rand::thread_rng();
+                let mut x: f32 = rng.gen_range(-10.0..10.0); // Explicitly specify type as f32
+                let mut y: f32 = rng.gen_range(-5.0..5.0);  // Explicitly specify type as f32
+
+                // Clamp the bot's position to the same constraints as the heart
+                x = x.clamp(-11.0, 11.0);
+                y = y.clamp(-4.0, 17.0);
+
+                // Spawn a bot rectangle
+                let bot_node = RectangleBuilder::new(
+                    BaseBuilder::new()
+                        .with_local_transform(
+                            TransformBuilder::new()
+                                .with_local_position(Vector3::new(x, y, 0.0))
+                                .build(),
+                        ),
+                )
+                .build(&mut scene.graph);
+
+                // Attach the Bot script
+                let bot_script = Bot::default();
+                scene.graph[bot_node].add_script(bot_script); // Use `scene.graph` directly
+                scene.graph[bot_node].set_name("Bot");
+
+                // Bind the texture to the bot's material
+                let bot_texture = context.resource_manager.request::<Texture>("data/dungeon/Tiles/tile_0121.png");
+                if let Some(rectangle) = scene.graph.try_get_mut(bot_node).and_then(|n| n.cast_mut::<Rectangle>()) {
+                    let material = rectangle.material();
+                    material.data_ref().bind("diffuseTexture", bot_texture);
+                }
+
+                println!("Spawned bot at: ({:.2}, {:.2})", x, y);
+            }
         }
     }
 }
+
+
 
 // ANCHOR: sprite_field
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
