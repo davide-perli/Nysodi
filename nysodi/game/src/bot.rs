@@ -66,6 +66,7 @@ pub struct Bot {
     // ANCHOR_END: animation_fields
 
     target_handle: Option<Handle<Node>>,
+    target_sprite_timer: f32,
 }
 
 #[derive(Visit, Reflect, Debug, Clone, Copy)]
@@ -96,6 +97,7 @@ impl Default for Bot {
             reaction_timer: 0.0,
             has_reacted: false,
             target_handle: None,
+            target_sprite_timer: 0.0,
         }
     }
 }
@@ -238,10 +240,13 @@ impl Bot {
     // ANCHOR_END: has_obstacles
 
     fn spawn_target_sprite(&mut self, ctx: &mut ScriptContext) -> Handle<Node> {
+        self.target_sprite_timer = f32::EPSILON; // Start the timer
+
+        // Check if the target sprite already exists
         if let Some(prev_target) = self.target_handle.take() {
             if let Some(prev_node) = ctx.scene.graph.try_get_mut(prev_target) {
                 ctx.scene.graph.remove_node(prev_target);
-                println!("▶ Previous target sprite removed."); // for other bots or when the target gets respawned
+                println!("▶ Previous target sprite removed.");
             }
         }
         // Get the skeleton's current position (the target's position)
@@ -263,11 +268,6 @@ impl Bot {
                 ),
         )
         .build(&mut ctx.scene.graph);
-
-        // Set the target sprite visibility to false
-        if let Some(node) = ctx.scene.graph.try_get_mut(target_sprite) {
-            node.set_visibility(false);
-        }
 
         // Bind the texture to the sprite
         if let Some(rectangle) = ctx.scene.graph.try_get_mut(target_sprite).and_then(|n| n.cast_mut::<Rectangle>()) {
@@ -458,37 +458,44 @@ impl ScriptTrait for Bot {
             }
         }
 
-        // 7) Update target sprite visibility based on shift key
-        // Similar to bomb handle, look for or create the target item on the map.
-        if let Some(prev_target) = self.target_handle.take() {
-            if let Some(prev_node) = ctx.scene.graph.try_get_mut(prev_target) {
-                prev_node.set_visibility(false); // Hide the previous target sprite in an intermittent way
-                println!("▶ Previous target sprite visibility hidden.");
-            }
-        }
+        // 7) Check for target item for the current self bot instance
+        let bot_position = ctx.scene.graph[ctx.handle].global_position();
+
         let target_item_handle = ctx
             .scene
             .graph
             .pair_iter_mut()
-            .find(|(_, node)| node.name() == "TargetItem" && node.visibility()) // Change "TargetItem" to the correct name
+            .find(|(_, node)| {
+                node.name() == "TargetItem"
+                    && node.visibility()
+                    && (node.global_position() - bot_position).norm_squared() < f32::EPSILON
+            })
             .map(|(handle, _)| handle);
-
-        // If there is no existing target item, create one
-        if target_item_handle.is_none() {
-            // Create target item sprite (similar to spawn_target_sprite function)
-            let target_item = self.spawn_target_sprite(ctx);
-            self.target_handle = Some(target_item);
-            println!("▶ Target item spawned at position: {:?}", ctx.scene.graph[target_item].global_position().xy());
-        } else if let Some(target_handle) = target_item_handle {
+        if let Some(target_handle) = target_item_handle {
             // If the target item exists, check its position and update or show it as necessary
             let bot_pos = ctx.scene.graph[ctx.handle].global_position().xy();
-
+            
             // Update target item's position
             if let Some(target_node) = ctx.scene.graph.try_get_mut(target_handle) {
                 // Update position to match the bot's position, you can adjust this as needed
                 target_node.local_transform_mut().set_position(Vector3::new(bot_pos.x, bot_pos.y, 0.0));
             }
         }
+        if self.target_sprite_timer > 0.0 {
+            self.target_sprite_timer += ctx.dt;
+            if self.target_sprite_timer >= 0.1 {
+                if let Some(target) = self.target_handle {
+                    if let Some(target_node) = ctx.scene.graph.try_get_mut(target) {
+                        target_node.set_visibility(false);
+                        println!("▶ Target sprite hidden after 0.1s");
+                    }
+                }
+                self.target_sprite_timer = 0.0;
+            }
+        }
+        
+        // 8) Check for target item nodes in the scene graph
+        // This is a debug print to check how many target item nodes are in the scene graph
         let target_count = ctx.scene.graph.pair_iter_mut()
             .filter(|(_, node)| node.name() == "TargetItem")
             .count();
@@ -503,6 +510,7 @@ impl ScriptTrait for Bot {
             if let WindowEvent::KeyboardInput { event, .. } = event {
                 if let PhysicalKey::Code(keycode) = event.physical_key {
                     let pressed = event.state == ElementState::Pressed;
+                    let released = event.state == ElementState::Released;
 
                     match event.physical_key {
                         PhysicalKey::Code(KeyCode::ShiftLeft) | PhysicalKey::Code(KeyCode::ShiftRight) if pressed => {
@@ -522,21 +530,40 @@ impl ScriptTrait for Bot {
                                         new_h
                                     );
                                     if let Some(target) = &self.target_handle {
-                                        // Spawn target sprite
-                                        // If Shift is not pressed, hide the target sprite
-                                        let target_pos = ctx.scene.graph[*target].global_position().xy();
-                                        if !pressed {
-                                            if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
-                                                target_node.set_visibility(false); // Hide the target
-                                                println!("Target sprite hidden at position: {:?}", target_pos);
-                                            }
-                                        } else {
-                                            // If Shift is pressed, make the target sprite visible
-                                            if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
-                                                target_node.set_visibility(true); // Show the target
-                                                println!("Target sprite visible at position: {:?}", target_pos);
-                                            }
+                                        if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
+                                            target_node.set_visibility(true);
+                                            println!("Target sprite visible at position: {:?}", target_node.global_position().xy());
                                         }
+                                    }
+                                }
+
+                                let bot_position = ctx.scene.graph[ctx.handle].global_position();
+
+                                let target_item_handle = ctx
+                                    .scene
+                                    .graph
+                                    .pair_iter_mut()
+                                    .find(|(_, node)| {
+                                        node.name() == "TargetItem"
+                                            && node.visibility()
+                                            && (node.global_position() - bot_position).norm_squared() < f32::EPSILON
+                                    })
+                                    .map(|(handle, _)| handle);
+
+                                // If there is no existing target item, create one
+                                if target_item_handle.is_none() {
+                                    // Create target item sprite (similar to spawn_target_sprite function)
+                                    let target_item = self.spawn_target_sprite(ctx);
+                                    self.target_handle = Some(target_item);
+                                    println!("▶ Target item spawned at position: {:?}", ctx.scene.graph[target_item].global_position().xy());
+                                }
+                            }
+                            if released {
+                                // Shift is released — delete the target node
+                                if let Some(target) = self.target_handle.take() {
+                                    if let Some(target_node) = ctx.scene.graph.try_get_mut(target) {
+                                        ctx.scene.graph.remove_node(target);
+                                        println!("▶ Previous target sprite removed.");
                                     }
                                 }
                             }
