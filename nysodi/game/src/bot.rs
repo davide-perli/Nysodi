@@ -10,11 +10,14 @@ use fyrox::{
         variable::InheritableVariable,
         visitor::prelude::*,
     },
-    graph::{SceneGraph},
+    graph::{SceneGraph, BaseSceneGraph},
     scene::{
+        transform::TransformBuilder,
+        base::BaseBuilder,
         animation::spritesheet::SpriteSheetAnimation,
         dim2::{
-            collider::Collider, rectangle::Rectangle, rigidbody::RigidBody,
+            collider::Collider, rigidbody::RigidBody,
+            rectangle::{Rectangle, RectangleBuilder},
         },
         node::Node,
         rigidbody::RigidBodyType,
@@ -22,6 +25,7 @@ use fyrox::{
     script::{ScriptContext, ScriptTrait},
     event::{ElementState, Event, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
+    gui::texture::Texture,
 };
 // ANCHOR_END: imports
 
@@ -60,6 +64,8 @@ pub struct Bot {
     reaction_state: ReactionState,
     has_reacted: bool,
     // ANCHOR_END: animation_fields
+
+    target_handle: Option<Handle<Node>>,
 }
 
 #[derive(Visit, Reflect, Debug, Clone, Copy)]
@@ -89,6 +95,7 @@ impl Default for Bot {
             reaction_state: ReactionState::Motionless,
             reaction_timer: 0.0,
             has_reacted: false,
+            target_handle: None,
         }
     }
 }
@@ -104,6 +111,11 @@ impl Bot {
     pub fn set_health(&mut self, new_health: f32) {
         self.pending_health_update = Some(new_health);
     }
+
+    pub fn set_health_fill_handle(&mut self, handle: Handle<Node>) {
+        self.health_fill_handle = handle;
+    }
+
     fn update_health_bar(&mut self, context: &mut ScriptContext) {
         if self.health_fill_handle.is_some() {
             let health_ratio = self.health / self.max_health;
@@ -224,6 +236,51 @@ impl Bot {
         false
     }
     // ANCHOR_END: has_obstacles
+
+    fn spawn_target_sprite(&mut self, ctx: &mut ScriptContext) -> Handle<Node> {
+        if let Some(prev_target) = self.target_handle.take() {
+            if let Some(prev_node) = ctx.scene.graph.try_get_mut(prev_target) {
+                ctx.scene.graph.remove_node(prev_target);
+                println!("▶ Previous target sprite removed."); // for other bots or when the target gets respawned
+            }
+        }
+        // Get the skeleton's current position (the target's position)
+        let skeleton_position = ctx.scene.graph[ctx.handle].global_position().xy();
+        let mut target_position = Vector2::new(skeleton_position.x, skeleton_position.y);
+
+        // Request the texture for the target sprite
+        let target_texture = ctx.resource_manager.request::<Texture>("data/target_img.png");
+
+        // Create the target sprite at the calculated position
+        let target_sprite = RectangleBuilder::new(
+            BaseBuilder::new()
+                .with_name("TargetItem")
+                .with_local_transform(
+                    TransformBuilder::new()
+                        .with_local_position(Vector3::new(target_position.x, target_position.y, 0.0))
+                        .with_local_scale(Vector3::new(0.7, 0.7, 0.7))
+                        .build(),
+                ),
+        )
+        .build(&mut ctx.scene.graph);
+
+        // Set the target sprite visibility to false
+        if let Some(node) = ctx.scene.graph.try_get_mut(target_sprite) {
+            node.set_visibility(false);
+        }
+
+        // Bind the texture to the sprite
+        if let Some(rectangle) = ctx.scene.graph.try_get_mut(target_sprite).and_then(|n| n.cast_mut::<Rectangle>()) {
+            let material = rectangle.material();
+            material.data_ref().bind("diffuseTexture", target_texture);
+        }
+
+        if let Some(bot_node) = ctx.scene.graph.try_get_mut(self.target) {
+            println!("▶ Target sprite spawned for {}, at position: {:?}", bot_node.name(), target_position);
+        }
+
+        target_sprite
+    }
 }
 
 impl ScriptTrait for Bot {
@@ -234,7 +291,9 @@ impl ScriptTrait for Bot {
         // Initialize health bar or other visual elements if needed
         self.update_health_bar(ctx);
 
-        println!("Bot initialized with target: {:?}", self.target);
+        if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+            println!("▶ {} initialized with target: {:?}", bot_node.name(), self.target);
+        }
     }
     
     fn on_update(&mut self, ctx: &mut ScriptContext) {
@@ -243,7 +302,7 @@ impl ScriptTrait for Bot {
 
         // 1) Pending health update & respawn
         if let Some(new_health) = self.pending_health_update.take() {
-            self.set_health(new_health);
+            self.health = new_health;
             self.update_health_bar(ctx);
 
             if self.health <= 0.0 {
@@ -251,10 +310,13 @@ impl ScriptTrait for Bot {
                 if self.respawn_timer.is_none() {
                     // Award points and hide the bot only once
                     ctx.plugins.get_mut::<Game>().total_score += 10.0;
-                    println!(
-                        "▶ Bot defeated! +10 points — total_score = {}",
-                        ctx.plugins.get::<Game>().total_score
-                    );
+                    if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                        println!(
+                            "▶ {} defeated! +10 points — total_score = {}",
+                            bot_node.name(),
+                            ctx.plugins.get::<Game>().total_score
+                        );
+                    }
             
                     if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
                         n.set_visibility(false);
@@ -273,7 +335,10 @@ impl ScriptTrait for Bot {
                             if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
                                 n.set_visibility(true);
                             }
-                            println!("▶ Bot respawned!");
+                            if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                                println!("▶ {} respawned!", bot_node.name());
+                            }
+
                             self.update_health_bar(ctx);
                         }
                     }
@@ -283,17 +348,25 @@ impl ScriptTrait for Bot {
         }
 
         if self.health <= 0.0 {
+            if let Some(prev_target) = self.target_handle.take() {
+                if let Some(prev_node) = ctx.scene.graph.try_get_mut(prev_target) {
+                    ctx.scene.graph.remove_node(prev_target);
+                    println!("▶ Previous target sprite removed.");
+                }
+            }
             // Respawn timer
             if let Some(t) = &mut self.respawn_timer {
                 *t += ctx.dt;
                 if *t >= 3.0 {
-                    self.set_health(self.max_health);
+                    self.health = self.max_health;
                     self.respawn_timer = None;
                     self.has_reacted = false; // Reset reaction state
                     if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
                         n.set_visibility(true);
                     }
-                    println!("▶ Bot respawned!");
+                    if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                        println!("▶ {} respawned!", bot_node.name());
+                    }
                     self.update_health_bar(ctx);
                 }
             } else {
@@ -308,7 +381,14 @@ impl ScriptTrait for Bot {
         if !self.has_reacted && total_score > 50.0 && self.reaction_timer <= 0.0 {
             self.has_reacted = true;
             self.trigger_reaction(total_score);
-            println!("▶ Reaction triggered: {:?} for 3s", self.reaction_state);
+            if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                println!(
+                    "▶ Reaction triggered for {}: {:?} for 3s",
+                    bot_node.name(),
+                    self.reaction_state
+                );
+            }
+
         }
 
         // 3) Handle freeze/flee
@@ -377,6 +457,44 @@ impl ScriptTrait for Bot {
                 rect.set_uv_rect(anim.current_frame_uv_rect().unwrap_or_default());
             }
         }
+
+        // 7) Update target sprite visibility based on shift key
+        // Similar to bomb handle, look for or create the target item on the map.
+        if let Some(prev_target) = self.target_handle.take() {
+            if let Some(prev_node) = ctx.scene.graph.try_get_mut(prev_target) {
+                prev_node.set_visibility(false); // Hide the previous target sprite in an intermittent way
+                println!("▶ Previous target sprite visibility hidden.");
+            }
+        }
+        let target_item_handle = ctx
+            .scene
+            .graph
+            .pair_iter_mut()
+            .find(|(_, node)| node.name() == "TargetItem" && node.visibility()) // Change "TargetItem" to the correct name
+            .map(|(handle, _)| handle);
+
+        // If there is no existing target item, create one
+        if target_item_handle.is_none() {
+            // Create target item sprite (similar to spawn_target_sprite function)
+            let target_item = self.spawn_target_sprite(ctx);
+            self.target_handle = Some(target_item);
+            println!("▶ Target item spawned at position: {:?}", ctx.scene.graph[target_item].global_position().xy());
+        } else if let Some(target_handle) = target_item_handle {
+            // If the target item exists, check its position and update or show it as necessary
+            let bot_pos = ctx.scene.graph[ctx.handle].global_position().xy();
+
+            // Update target item's position
+            if let Some(target_node) = ctx.scene.graph.try_get_mut(target_handle) {
+                // Update position to match the bot's position, you can adjust this as needed
+                target_node.local_transform_mut().set_position(Vector3::new(bot_pos.x, bot_pos.y, 0.0));
+            }
+        }
+        let target_count = ctx.scene.graph.pair_iter_mut()
+            .filter(|(_, node)| node.name() == "TargetItem")
+            .count();
+
+        println!("▶ Number of target item nodes in scene graph: {}", target_count);
+
     }
 
 
@@ -397,9 +515,31 @@ impl ScriptTrait for Bot {
                             if distance <= 2.0 {
                                 let new_h = (self.health - 10.0).max(0.0);
                                 self.set_health(new_h);                         // <<< enqueue the change
-                                println!("▶ Bot took damage! Pending health = {}", new_h);
+                                if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
+                                    println!(
+                                        "▶ {} took damage! Pending health = {}",
+                                        bot_node.name(),
+                                        new_h
+                                    );
+                                    if let Some(target) = &self.target_handle {
+                                        // Spawn target sprite
+                                        // If Shift is not pressed, hide the target sprite
+                                        let target_pos = ctx.scene.graph[*target].global_position().xy();
+                                        if !pressed {
+                                            if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
+                                                target_node.set_visibility(false); // Hide the target
+                                                println!("Target sprite hidden at position: {:?}", target_pos);
+                                            }
+                                        } else {
+                                            // If Shift is pressed, make the target sprite visible
+                                            if let Some(target_node) = ctx.scene.graph.try_get_mut(*target) {
+                                                target_node.set_visibility(true); // Show the target
+                                                println!("Target sprite visible at position: {:?}", target_pos);
+                                            }
+                                        }
+                                    }
+                                }
                             }
-
                         }
                         _ => {}
                     }
