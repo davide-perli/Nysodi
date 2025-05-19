@@ -497,18 +497,18 @@
                 projection: Orthographic((
                     z_near: 0.025,
                     z_far: 128.0,
-                    vertical_size: 5.0,
+                    vertical_size: 10.0,
                 )),
             ),
             node_infos: {
                 (
-                    index: 327,
+                    index: 328,
                     generation: 1,
                 ): (
                     is_expanded: true,
                 ),
                 (
-                    index: 328,
+                    index: 327,
                     generation: 1,
                 ): (
                     is_expanded: true,
