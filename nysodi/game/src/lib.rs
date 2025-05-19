@@ -142,6 +142,10 @@ struct Player {
     heart_pulse_timer: f32,
     explosion_timer: Option<f32>,
 
+    fire_timer: Option<f32>,        // None when no fire is active
+    fire_tick_accum: f32,           // accumulates dt until ≥1.0 to deal next tick
+
+
     pub has_printed_game_over: bool,
 }
 
@@ -165,12 +169,59 @@ impl Default for Player {
             last_health: 100.0,
             heart_pulse_timer: 0.0,
             explosion_timer: None,
+            fire_timer: None,
+            fire_tick_accum: 0.0,
             has_printed_game_over: false,
         }
     }
 }
 
 impl Player {
+
+    fn spawn_fire(&self, context: &mut ScriptContext) -> (Handle<Node>, Vector2<f32>) {
+        // 1) Get player position
+        let player_position = context.scene.graph[self.sprite]
+            .global_position()
+            .xy();
+
+        // 2) Random offset
+        let mut rng = rand::thread_rng();
+        let offset_x: f32 = rng.gen_range(-5.0..=5.0);
+        let offset_y: f32 = rng.gen_range(-5.0..=5.0);
+
+        let mut fire_position = Vector2::new(
+            player_position.x + offset_x,
+            player_position.y + offset_y,
+        );
+        // 3) Clamp to arena bounds
+        fire_position.x = fire_position.x.clamp(-11.0, 11.0);
+        fire_position.y = fire_position.y.clamp(-4.0, 17.0);
+
+        // 4) Build the rectangle
+        let fire_texture = context.resource_manager.request::<Texture>("data/fire.png");
+        let fire = RectangleBuilder::new(
+            BaseBuilder::new()
+                .with_local_transform(
+                    TransformBuilder::new()
+                        .with_local_position(Vector3::new(fire_position.x, fire_position.y, 0.0))
+                        .with_local_scale(Vector3::new(0.8, 0.8, 0.8))
+                        .build(),
+                ),
+        )
+        .build(&mut context.scene.graph);
+
+        // 5) Apply texture
+        if let Some(rect) = context.scene.graph.try_get_mut(fire)
+                            .and_then(|n| n.cast_mut::<Rectangle>()) {
+            rect.material().data_ref().bind("diffuseTexture", fire_texture);
+        }
+
+        println!("Fire spawned at: {:?}", fire_position);
+
+        (fire, fire_position)
+    }
+
+
     fn spawn_heart(&self, context: &mut ScriptContext) -> Handle<Node> {
         let player_position = context.scene.graph[self.sprite]
             .global_position()
@@ -393,6 +444,11 @@ impl ScriptTrait for Player {
             context.scene.graph[bomb].set_name("Bomb");
             context.scene.graph[bomb].set_visibility(true);
 
+            let (fire, _) = self.spawn_fire(context);
+            context.scene.graph[fire].set_name("Fire");
+            context.scene.graph[fire].set_visibility(true);
+
+
             self.bomb_timer = 0.0;
         }
 
@@ -495,6 +551,49 @@ impl ScriptTrait for Player {
                 }
             }
         }
+
+        // 1) Handle existing fire on the map (pulsing + pickup)
+        let fire_handle = context.scene.graph
+            .pair_iter_mut()
+            .find(|(_, node)| node.name() == "Fire" && node.visibility())
+            .map(|(h, _)| h);
+        if let Some(fh) = fire_handle {
+            // Pulse
+            let pulse = 0.8 + 0.1 * (self.heart_pulse_timer * 5.0).sin();
+            if let Some(n) = context.scene.graph.try_get_mut(fh) {
+                n.local_transform_mut().set_scale(Vector3::new(pulse, pulse, 1.0));
+            }
+            // Pickup
+            let pp = context.scene.graph[self.sprite].global_position().xy();
+            let fp = context.scene.graph[fh].global_position().xy();
+            if (pp - fp).norm() < 1.0 {
+                println!("🔥 Fire activated!");
+                context.scene.graph[fh].set_visibility(false);
+                self.fire_timer = Some(8.0);
+                self.fire_tick_accum = 0.0;
+            }
+        }
+
+        // 2) Handle fire damage‐over‐time
+        if let Some(time_left) = &mut self.fire_timer {
+            *time_left -= context.dt;
+            self.fire_tick_accum += context.dt;
+            while self.fire_tick_accum >= 1.0 {
+                self.fire_tick_accum -= 1.0;
+                println!("🔥 Fire tick: 5 damage to all bots");
+                for (_h, node) in context.scene.graph.pair_iter_mut() {
+                    if let Some(bot) = node.script_mut(0).and_then(|s| s.cast_mut::<Bot>()) {
+                        let hp = (bot.get_health() - 5.0).max(0.0);
+                        bot.set_health(hp);
+                    }
+                }
+            }
+            if *time_left <= 0.0 {
+                println!("🔥 Fire effect ended");
+                self.fire_timer = None;
+            }
+        }
+
         // The script can be assigned to any scene node, but we assert that it will work only with
         // 2d rigid body nodes.
         if let Some(rigid_body) = context.scene.graph[context.handle].cast_mut::<RigidBody>() {
