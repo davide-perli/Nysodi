@@ -63,7 +63,8 @@ pub struct Bot {
 
     reaction_timer: f32,
     reaction_state: ReactionState,
-    has_reacted: bool,
+    reaction_cooldown: f32,
+    //has_reacted: bool,
     // ANCHOR_END: animation_fields
 
     target_handle: Option<Handle<Node>>,
@@ -96,7 +97,8 @@ impl Default for Bot {
             pending_health_update: None,
             reaction_state: ReactionState::Motionless,
             reaction_timer: 0.0,
-            has_reacted: false,
+            reaction_cooldown: 0.0,
+            //has_reacted: false,
             target_handle: None,
             target_sprite_timer: 0.0,
         }
@@ -136,8 +138,8 @@ impl Bot {
         }
     }
 
-    pub fn trigger_reaction(&mut self, total_score: f32) {
-        if total_score < 80.0 {
+    pub fn trigger_reaction(&mut self) {
+        if fyrox::rand::thread_rng().gen_bool(0.5) { // This line generates a random boolean value that is true with a 50% probability and false with a 50% probability
             self.reaction_state = ReactionState::Motionless;
         } else {
             self.reaction_state = ReactionState::RunningAway;
@@ -321,6 +323,7 @@ impl ScriptTrait for Bot {
                 // Respawn timer
                 if self.respawn_timer.is_none() {
                     // Award points and hide the bot only once
+                    ctx.plugins.get_mut::<Game>().bot_kill_count += 1;
                     ctx.plugins.get_mut::<Game>().total_score += 10.0;
                     if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
                         println!(
@@ -343,7 +346,7 @@ impl ScriptTrait for Bot {
                         if *t >= 3.0 {
                             self.health = self.max_health;
                             self.respawn_timer = None;
-                            self.has_reacted = false; // Reset reaction state
+                            //self.has_reacted = false; // Reset reaction state
                             if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
                                 n.set_visibility(true);
                             }
@@ -372,13 +375,16 @@ impl ScriptTrait for Bot {
                 if *t >= 3.0 {
                     self.health = self.max_health;
                     self.respawn_timer = None;
-                    self.has_reacted = false; // Reset reaction state
+                    //self.has_reacted = false; // Reset reaction state
+                    // Get the player's position first (immutable borrow)
+                    let player_pos = ctx.scene.graph[self.target].global_position().xy();
+
                     if let Some(n) = ctx.scene.graph.try_get_mut(ctx.handle) {
                         let mut rng = rand::thread_rng();
                         let offset_x: f32 = rng.gen_range(-5.0..=5.0);
                         let offset_y: f32 = rng.gen_range(-5.0..=5.0);
 
-                        let mut position = Vector2::new(offset_x, offset_y);
+                        let mut position = Vector2::new(player_pos.x + offset_x, player_pos.y + offset_y);
                         position.x = position.x.clamp(-11.0, 11.0);
                         position.y = position.y.clamp(-4.0, 17.0);
 
@@ -404,12 +410,15 @@ impl ScriptTrait for Bot {
             return;
         }
 
-        // 2) Trigger reaction once when score > 50
-        let total_score = ctx.plugins.get::<Game>().total_score;
-
-        if !self.has_reacted && total_score > 50.0 && self.reaction_timer <= 0.0 {
-            self.has_reacted = true;
-            self.trigger_reaction(total_score);
+        // 2) Trigger reaction
+        let bot_kill_count = ctx.plugins.get::<Game>().bot_kill_count;
+        // Increment the cooldown timer
+        self.reaction_cooldown += ctx.dt;
+        // If 10 seconds have passed, trigger a reaction and reset the timer
+        if bot_kill_count >= 6 && self.reaction_cooldown >= 10.0 && self.reaction_timer <= 0.0 {
+            self.trigger_reaction();
+            self.reaction_cooldown = 0.0; // Reset the cooldown timer
+            ctx.plugins.get_mut::<Game>().bot_kill_count = 0; // Reset the kill count
             if let Some(bot_node) = ctx.scene.graph.try_get_mut(ctx.handle) {
                 println!(
                     "▶ Reaction triggered for {}: {:?} for 3s",
@@ -417,8 +426,8 @@ impl ScriptTrait for Bot {
                     self.reaction_state
                 );
             }
-
         }
+
 
         // 3) Handle freeze/flee
         if self.reaction_timer > 0.0 {

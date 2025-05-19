@@ -497,10 +497,23 @@
                 projection: Orthographic((
                     z_near: 0.025,
                     z_far: 128.0,
-                    vertical_size: 12.5,
+                    vertical_size: 5.0,
                 )),
             ),
-            node_infos: {},
+            node_infos: {
+                (
+                    index: 328,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 327,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+            },
         ),
     },
     recent: (

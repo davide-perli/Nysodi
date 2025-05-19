@@ -50,6 +50,7 @@ pub struct Game {
     scene: Handle<Scene>,
     player: Handle<Node>,
     pub total_score: f32,
+    pub bot_kill_count: u32, // Thanks to the Default flag, this will be initialized to 0, without needing to have impl Default for Game
     #[visit(optional)] #[reflect(hidden)]
     bot_spawn_timer: f32,
     #[visit(optional)] #[reflect(hidden)]
@@ -79,7 +80,6 @@ impl Plugin for Game {
         }
         self.scene = scene;
         self.bot_spawn_timer = 0.0;
-
     }
 
     fn update(&mut self, context: &mut PluginContext) {
@@ -97,11 +97,13 @@ impl Plugin for Game {
                     .pair_iter_mut()
                     .find(|(_, node)| node.name().starts_with("Skeleton") && !node.visibility())
                 {
-                    // let position = node.global_position();
-                    // let x = position.x;
-                    // let y = position.y;
-                    node.local_transform_mut().set_position(Vector3::new(0.0, 0.0, 0.0));
-                    
+                    node.local_transform_mut().set_position(Vector3::new(0.0, 0.0, 0.0)); // Bot will be placed at 0 0 when first spawned
+                    println!(
+                            "▶ {:?} first spawned at ({:.2}, {:.2})",
+                            node.name(),
+                            node.local_transform().position().x,
+                            node.local_transform().position().y
+                        );
                     node.set_visibility(true); // Make the bot visible
                 }
             }
