@@ -320,6 +320,7 @@ impl ScriptTrait for Bot {
             self.update_health_bar(ctx);
 
             if self.health <= 0.0 {
+                self.current_animation.set_value_and_mark_modified(1); // Play death animation
                 // Respawn timer
                 if self.respawn_timer.is_none() {
                     // Award points and hide the bot only once
@@ -428,7 +429,6 @@ impl ScriptTrait for Bot {
             }
         }
 
-
         // 3) Handle freeze/flee
         if self.reaction_timer > 0.0 {
             self.reaction_timer -= ctx.dt;
@@ -439,10 +439,12 @@ impl ScriptTrait for Bot {
                     ReactionState::Motionless => {
                         self.direction = Vector2::zeros();
                         self.speed.set_value_and_mark_modified(0.0);
+                         self.current_animation.set_value_and_mark_modified(4);
                     }
                     ReactionState::RunningAway => {
                         self.direction = (me - them).normalize();
                         self.speed.set_value_and_mark_modified(2.0);
+                        self.current_animation.set_value_and_mark_modified(2);
                     }
                 }
                 self.do_move(ctx);
@@ -488,14 +490,45 @@ impl ScriptTrait for Bot {
             self.damage_timer = 0.0;
         }
 
-        // 6) Animation update
-        if self.direction.x.abs() > 0.0 || self.direction.y.abs() > 0.0 {
-            self.current_animation.set_value_and_mark_modified(2);
+        // 5) Determine the animation index based on the bot's state
+        let mut new_index = *self.current_animation;
+
+        // If bot has a target and is close enough, attack
+        if self.target.is_some() {
+            let target = self.target;
+            let target_position = ctx.scene.graph[target].global_position();
+            let self_position = ctx.scene.graph[ctx.handle].global_position();
+            let distance = target_position.metric_distance(&self_position);
+
+            if distance < 1.4 {
+                new_index = 0; // Attack
+            } else if self.direction.x.abs() > 0.0 || self.direction.y.abs() > 0.0 {
+                new_index = 2; // Walk
+            }
+        } else if self.direction.x.abs() > 0.0 || self.direction.y.abs() > 0.0 {
+            new_index = 2; // Walk
         } else {
-            self.current_animation.set_value_and_mark_modified(0);
+            new_index = 3; // Idle
         }
+
+        // Only switch animations when the index changes
+        if *self.current_animation != new_index {
+            self.current_animation.set_value_and_mark_modified(new_index);
+        }
+
+        // 6) Animation update
         if let Some(anim) = self.animations.get_mut(*self.current_animation as usize) {
             anim.update(ctx.dt);
+            if !anim.is_playing() {
+                anim.play();
+            }
+            // println!(
+            //     "Playing animation index: {}, current frame: {}, looping: {}, playing: {}",
+            //     *self.current_animation,
+            //     anim.current_frame(),
+            //     anim.is_looping(),
+            //     anim.is_playing()
+            // );
             if let Some(rect) = ctx.scene.graph.try_get_mut(*self.rectangle)
                 .and_then(|n| n.cast_mut::<Rectangle>())
             {
