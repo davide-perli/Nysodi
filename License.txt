@@ -1,0 +1,13 @@
+Personal and Commercial Use License
+
+Copyright © 2025 Perli Davide and Andra Alexandrescu
+
+    You are free to use, modify, and distribute this software for personal, educational, or non-commercial purposes at no cost.
+
+    Commercial use (including, but not limited to, selling, licensing, or using as part of a commercial product or service) is not permitted without explicit, written permission and a commercial license from the copyright holders.
+
+If you wish to use this project commercially, please contact:
+
+    Perli Davide: perlidavide@gmail.com
+
+    Andra Alexandrescu: alexandrecuandra2005@gmail.com
