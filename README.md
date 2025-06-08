@@ -82,11 +82,7 @@ fn on_update(&mut self, context: &mut ScriptContext) {
     self.update_health_bar(context);
 
     if self.health  _“Built with Rust, powered by passion.”_
-
----
-
-Absolutely! Here’s a much cleaner and visually appealing Contact section for your README.  
-This version uses Markdown formatting for clarity, spacing, and a professional look:
+```
 
 ---
 
