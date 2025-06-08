@@ -170,47 +170,63 @@ classDiagram
 ## 🗺️ Architecture Overview
 
 ```mermaid
-flowchart TD
-    subgraph "Development & Editor"
-        EditorApp["Editor App"]:::engine
+flowchart LR
+    %% Editor & Tooling
+    subgraph "🛠️ Editor & Tooling"
+        EditorApp["Editor App"]
     end
 
-    subgraph "Runtimes"
-        ExecutorDesktop["Executor-Desktop"]:::engine
-        ExecutorWASM["Executor-WASM"]:::engine
-        ExecutorAndroid["Executor-Android"]:::engine
+    %% Asset Repository
+    subgraph "📦 Asset Repository"
+        AssetStore["Asset Store (nysodi/data/)"]
     end
 
-    FyroxEngine["Fyrox Engine"]:::engine
-    AssetStore["Asset Store (nysodi/data/)"]:::assets
-    GameLogicPlugin["Game Logic Plugin (cdylib)"]:::game
-    CoreGame["Core Game Logic (game crate)"]:::game
-
-    subgraph "Platform Hosts"
-        Browser["Browser Host"]:::platform
-        AndroidOS["Android OS Host"]:::platform
+    %% Game Logic
+    subgraph "🧠 Game Logic"
+        GameLogicPlugin["Game Logic Plugin (cdylib)"]
+        CoreGame["Core Game Logic (game crate)"]
     end
 
-    EditorApp -->|"calls rendering/input"| FyroxEngine
-    ExecutorDesktop -->|"calls rendering/input"| FyroxEngine
-    ExecutorWASM -->|"calls rendering/input"| FyroxEngine
-    ExecutorAndroid -->|"calls rendering/input"| FyroxEngine
+    %% Engine Core
+    subgraph "⚙️ Fyrox Engine"
+        FyroxEngine["Fyrox Engine"]
+    end
 
-    EditorApp -->|"load_scene(), load_assets"| AssetStore
-    ExecutorDesktop -->|"load_scene(), load_assets"| AssetStore
-    ExecutorWASM -->|"load_scene(), load_assets"| AssetStore
-    ExecutorAndroid -->|"load_scene(), load_assets"| AssetStore
+    %% Runtimes
+    subgraph "🖥️ Runtimes"
+        ExecutorDesktop["Executor-Desktop"]
+        ExecutorWASM["Executor-WASM"]
+        ExecutorAndroid["Executor-Android"]
+    end
 
-    EditorApp -->|"load_plugin()"| GameLogicPlugin
-    ExecutorDesktop -->|"load_plugin()"| GameLogicPlugin
-    ExecutorWASM -->|"load_plugin()"| GameLogicPlugin
-    ExecutorAndroid -->|"load_plugin()"| GameLogicPlugin
+    %% Platform Hosts
+    subgraph "🌐 Platform Hosts"
+        Browser["Browser Host"]
+        AndroidOS["Android OS Host"]
+    end
 
-    GameLogicPlugin -->|"invoke_on_init(), on_update()"| CoreGame
+    %% Connections
+    EditorApp -- "calls rendering/input" --> FyroxEngine
+    ExecutorDesktop -- "calls rendering/input" --> FyroxEngine
+    ExecutorWASM -- "calls rendering/input" --> FyroxEngine
+    ExecutorAndroid -- "calls rendering/input" --> FyroxEngine
 
-    ExecutorWASM -->|"WebGL, JS glue (main.js)"| Browser
-    ExecutorAndroid -->|"JNI bridge"| AndroidOS
+    EditorApp -- "load_scene(), load_assets" --> AssetStore
+    ExecutorDesktop -- "load_scene(), load_assets" --> AssetStore
+    ExecutorWASM -- "load_scene(), load_assets" --> AssetStore
+    ExecutorAndroid -- "load_scene(), load_assets" --> AssetStore
 
+    EditorApp -- "load_plugin()" --> GameLogicPlugin
+    ExecutorDesktop -- "load_plugin()" --> GameLogicPlugin
+    ExecutorWASM -- "load_plugin()" --> GameLogicPlugin
+    ExecutorAndroid -- "load_plugin()" --> GameLogicPlugin
+
+    GameLogicPlugin -- "invoke_on_init(), on_update()" --> CoreGame
+
+    ExecutorWASM -- "WebGL, JS glue (main.js)" --> Browser
+    ExecutorAndroid -- "JNI bridge" --> AndroidOS
+
+    %% Clickable links for GitHub
     click EditorApp "https://github.com/davide-perli/nysodi/tree/main/nysodi/editor/"
     click ExecutorDesktop "https://github.com/davide-perli/nysodi/tree/main/nysodi/executor/"
     click ExecutorWASM "https://github.com/davide-perli/nysodi/tree/main/nysodi/executor-wasm/"
@@ -219,10 +235,16 @@ flowchart TD
     click CoreGame "https://github.com/davide-perli/nysodi/tree/main/nysodi/game/"
     click AssetStore "https://github.com/davide-perli/nysodi/tree/main/nysodi/data/"
 
-    classDef engine fill:#cce5ff,stroke:#004085
-    classDef game fill:#d4edda,stroke:#155724
-    classDef assets fill:#fff3cd,stroke:#856404
-    classDef platform fill:#e2dfff,stroke:#4b0082
+    %% Styling
+    classDef engine fill:#cce5ff,stroke:#004085,stroke-width:2px;
+    classDef game fill:#d4edda,stroke:#155724,stroke-width:2px;
+    classDef assets fill:#fff3cd,stroke:#856404,stroke-width:2px;
+    classDef platform fill:#e2dfff,stroke:#4b0082,stroke-width:2px;
+    class EditorApp,ExecutorDesktop,ExecutorWASM,ExecutorAndroid engine;
+    class FyroxEngine engine;
+    class GameLogicPlugin,CoreGame game;
+    class AssetStore assets;
+    class Browser,AndroidOS platform;
 ```
 
 ---
