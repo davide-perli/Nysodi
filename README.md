@@ -84,7 +84,7 @@ fn on_update(&mut self, context: &mut ScriptContext) {
     if self.health  _“Built with Rust, powered by passion.”_
 
 
-## :handshake: Contact
+### :handshake: Contact
 
 Perli Davide and Andra Alexandrescu - - perlidavide@gmail.com    alexandrecuandra2005@gmail.com
 
