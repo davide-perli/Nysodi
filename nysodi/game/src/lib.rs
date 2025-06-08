@@ -1,7 +1,6 @@
 //! Game project.
 
 mod bot;
-mod residuals;
         
 // ANCHOR: imports
 use crate::bot::Bot;
@@ -112,8 +111,6 @@ impl Plugin for Game {
 
 
 }
-
-
 
 // ANCHOR: sprite_field
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
