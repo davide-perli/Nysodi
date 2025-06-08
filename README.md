@@ -71,7 +71,11 @@ cargo run --package editor --release
 
 ### 🖼️ Screenshots
 
-> _Add your gameplay screenshots here!_
+<p align="center">
+  <img src="assets/screenshots/gameplay1.png" alt="Gameplay Screenshot 1" width="600"/>
+  <br/>
+  <img src="assets/screenshots/gameplay2.png" alt="Gameplay Screenshot 2" width="600"/>
+</p>
 
 ---
 
