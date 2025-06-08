@@ -44,6 +44,36 @@ use fyrox::{
 use std::{path::Path, ptr::null_mut};
 // ANCHOR_END: imports
 
+const MIN_DISTANCE_FROM_PLAYER: f32 = 5.0;   // never spawn closer than 5 units
+const MAX_DISTANCE_FROM_PLAYER: f32 = 11.0;  // clamp max radius if you like
+const MIN_SEPARATION: f32 = 4.0;             // bomb & fire at least 4 units apart
+
+fn random_point_around(
+    center: Vector2<f32>,
+    min_r: f32,
+    max_r: f32,
+    rng: &mut impl Rng
+) -> Vector2<f32> {
+    loop {
+        // pick random angle
+        let theta = rng.gen_range(0.0..std::f32::consts::TAU);
+        // radius uniformly between min and max
+        let r = rng.gen_range(min_r..=max_r);
+        let candidate = Vector2::new(center.x + r * theta.cos(),
+                                     center.y + r * theta.sin());
+        // clamp to arena:
+        let clamped = Vector2::new(candidate.x.clamp(-11.0,11.0),
+                                   candidate.y.clamp(-4.0,17.0));
+        // ensure after clamping it's still at least min_r away?
+        if (clamped - center).norm() >= min_r {
+            return clamped;
+        }
+        // otherwise retry
+    }
+}
+
+
+
 #[derive(Visit, Reflect, Debug, Default)]
 pub struct Game {
     scene: Handle<Scene>,
@@ -112,6 +142,8 @@ impl Plugin for Game {
 
 }
 
+
+
 // ANCHOR: sprite_field
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
 #[type_uuid(id = "c5671d19-9f1a-4286-8486-add4ebaadaec")]
@@ -139,6 +171,10 @@ struct Player {
     heart_pulse_timer: f32,
     explosion_timer: Option<f32>,
 
+    fire_timer: Option<f32>,        // None when no fire is active
+    fire_tick_accum: f32,           // accumulates dt until ≥1.0 to deal next tick
+
+
     pub has_printed_game_over: bool,
 }
 
@@ -162,12 +198,70 @@ impl Default for Player {
             last_health: 100.0,
             heart_pulse_timer: 0.0,
             explosion_timer: None,
+            fire_timer: None,
+            fire_tick_accum: 0.0,
             has_printed_game_over: false,
         }
     }
 }
 
 impl Player {
+
+    /// Spawn bomb at explicit `pos`
+    fn spawn_item(
+        &self,
+        context: &mut ScriptContext,
+        pos: Vector2<f32>
+    ) -> Handle<Node> {
+        let bomb_texture = context.resource_manager.request::<Texture>("data/bomb.png");
+        let bomb = RectangleBuilder::new(
+            BaseBuilder::new()
+                .with_local_transform(
+                    TransformBuilder::new()
+                        .with_local_position(Vector3::new(pos.x, pos.y, 0.0))
+                        .with_local_scale(Vector3::new(0.7, 0.7, 0.7))
+                        .build(),
+                ),
+        )
+        .build(&mut context.scene.graph);
+
+        if let Some(rect) = context.scene.graph.try_get_mut(bomb)
+                            .and_then(|n| n.cast_mut::<Rectangle>()) {
+            rect.material().data_ref().bind("diffuseTexture", bomb_texture);
+        }
+
+        println!("Bomb spawned at: {:?}", pos);
+        bomb
+    }
+
+    /// Spawn fire at explicit `pos`
+    fn spawn_fire(
+        &self,
+        context: &mut ScriptContext,
+        pos: Vector2<f32>
+    ) -> Handle<Node> {
+        let fire_texture = context.resource_manager.request::<Texture>("data/fire.png");
+        let fire = RectangleBuilder::new(
+            BaseBuilder::new()
+                .with_local_transform(
+                    TransformBuilder::new()
+                        .with_local_position(Vector3::new(pos.x, pos.y, 0.0))
+                        .with_local_scale(Vector3::new(0.8, 0.8, 0.8))
+                        .build(),
+                ),
+        )
+        .build(&mut context.scene.graph);
+
+        if let Some(rect) = context.scene.graph.try_get_mut(fire)
+                            .and_then(|n| n.cast_mut::<Rectangle>()) {
+            rect.material().data_ref().bind("diffuseTexture", fire_texture);
+        }
+
+        println!("Fire spawned at: {:?}", pos);
+        fire
+    }
+
+
     fn spawn_heart(&self, context: &mut ScriptContext) -> Handle<Node> {
         let player_position = context.scene.graph[self.sprite]
             .global_position()
@@ -201,41 +295,6 @@ impl Player {
         println!("Heart spawned at: {:?}", heart_position);
 
         heart
-    }
-
-    fn spawn_item(&self, context: &mut ScriptContext) -> (Handle<Node>, Vector2<f32>) {
-        let player_position = context.scene.graph[self.sprite]
-            .global_position()
-            .xy();
-
-        let mut rng = rand::thread_rng();
-        let offset_x: f32 = rng.gen_range(-5.0..=5.0);
-        let offset_y: f32 = rng.gen_range(-5.0..=5.0);
-        let mut item_position = Vector2::new(player_position.x + offset_x, player_position.y + offset_y);
-        item_position.x = item_position.x.clamp(-11.0, 11.0);
-        item_position.y = item_position.y.clamp(-4.0, 17.0);
-
-        let bomb_texture = context.resource_manager.request::<Texture>("data/bomb.png");
-
-        let bomb = RectangleBuilder::new(
-            BaseBuilder::new()
-                .with_local_transform(
-                    TransformBuilder::new()
-                        .with_local_position(Vector3::new(item_position.x, item_position.y, 0.0))
-                        .with_local_scale(Vector3::new(0.7, 0.7, 0.7))
-                        .build(),
-                ),
-        )
-        .build(&mut context.scene.graph);
-
-        if let Some(rectangle) = context.scene.graph.try_get_mut(bomb).and_then(|n| n.cast_mut::<Rectangle>()) {
-            let material = rectangle.material();
-            material.data_ref().bind("diffuseTexture", bomb_texture);
-        }
-
-        println!("Bomb spawned at: {:?}", item_position);
-
-        (bomb, item_position)
     }
 
     fn update_health_bar(&mut self, context: &mut ScriptContext) {
@@ -386,9 +445,35 @@ impl ScriptTrait for Player {
         self.bomb_timer += context.dt;
 
         if self.bomb_timer >= 30.0 {
-            let (bomb, _) = self.spawn_item(context);
+            let player_pos = context.scene.graph[self.sprite].global_position().xy();
+            let mut rng = rand::thread_rng();
+
+            // Compute bomb position
+            let bomb_pos = random_point_around(
+                player_pos,
+                MIN_DISTANCE_FROM_PLAYER,
+                MAX_DISTANCE_FROM_PLAYER,
+                &mut rng,
+            );
+            let bomb = self.spawn_item(context, bomb_pos);
             context.scene.graph[bomb].set_name("Bomb");
             context.scene.graph[bomb].set_visibility(true);
+
+            // Compute fire position, ensure separation from bomb
+            let fire_pos = loop {
+                let p = random_point_around(
+                    player_pos,
+                    MIN_DISTANCE_FROM_PLAYER,
+                    MAX_DISTANCE_FROM_PLAYER,
+                    &mut rng,
+                );
+                if (p - bomb_pos).norm() >= MIN_SEPARATION {
+                    break p;
+                }
+            };
+            let fire = self.spawn_fire(context, fire_pos);
+            context.scene.graph[fire].set_name("Fire");
+            context.scene.graph[fire].set_visibility(true);
 
             self.bomb_timer = 0.0;
         }
@@ -429,7 +514,7 @@ impl ScriptTrait for Player {
                         // Adjust the scale of the rectangle to make the texture appear larger
                         bomb_node
                         .local_transform_mut()
-                        .set_scale(Vector3::new(3.5, 3.5, 1.0)); // Scale the rectangle (3x larger)
+                        .set_scale(Vector3::new(1.5, 1.5, 1.0)); // Scale the rectangle (1.5x larger)
 
 
                     println!("Explosion scale set to: {:?}, UV rect set to full texture.", bomb_node.local_transform().scale());
@@ -492,6 +577,49 @@ impl ScriptTrait for Player {
                 }
             }
         }
+
+        // 1) Handle existing fire on the map (pulsing + pickup)
+        let fire_handle = context.scene.graph
+            .pair_iter_mut()
+            .find(|(_, node)| node.name() == "Fire" && node.visibility())
+            .map(|(h, _)| h);
+        if let Some(fh) = fire_handle {
+            // Pulse
+            let pulse = 0.8 + 0.1 * (self.heart_pulse_timer * 5.0).sin();
+            if let Some(n) = context.scene.graph.try_get_mut(fh) {
+                n.local_transform_mut().set_scale(Vector3::new(pulse, pulse, 1.0));
+            }
+            // Pickup
+            let pp = context.scene.graph[self.sprite].global_position().xy();
+            let fp = context.scene.graph[fh].global_position().xy();
+            if (pp - fp).norm() < 1.0 {
+                println!("🔥 Fire activated!");
+                context.scene.graph[fh].set_visibility(false);
+                self.fire_timer = Some(8.0);
+                self.fire_tick_accum = 0.0;
+            }
+        }
+
+        // 2) Handle fire damage‐over‐time
+        if let Some(time_left) = &mut self.fire_timer {
+            *time_left -= context.dt;
+            self.fire_tick_accum += context.dt;
+            while self.fire_tick_accum >= 1.0 {
+                self.fire_tick_accum -= 1.0;
+                println!("🔥 Fire tick: 5 damage to all bots");
+                for (_h, node) in context.scene.graph.pair_iter_mut() {
+                    if let Some(bot) = node.script_mut(0).and_then(|s| s.cast_mut::<Bot>()) {
+                        let hp = (bot.get_health() - 5.0).max(0.0);
+                        bot.set_health(hp);
+                    }
+                }
+            }
+            if *time_left <= 0.0 {
+                println!("🔥 Fire effect ended");
+                self.fire_timer = None;
+            }
+        }
+
         // The script can be assigned to any scene node, but we assert that it will work only with
         // 2d rigid body nodes.
         if let Some(rigid_body) = context.scene.graph[context.handle].cast_mut::<RigidBody>() {
