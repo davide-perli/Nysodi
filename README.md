@@ -86,6 +86,15 @@ fn on_update(&mut self, context: &mut ScriptContext) {
 
 ---
 
+## ⚠️ License
+
+This project is free for personal and non-commercial use.
+If you wish to use this project or its code for commercial purposes, you must obtain a commercial license.
+
+See LICENSE.txt for full details.
+
+---
+
 ### 🤝 Contact
 
 **Perli Davide**  
