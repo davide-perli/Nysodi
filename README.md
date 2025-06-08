@@ -34,7 +34,7 @@ This project leverages the power of the [Fyrox](https://fyrox.rs/) game engine f
 
 - **Enemies:** Skeleton bots spawn periodically and become visible at the center of the map.
 - **Health:** Your player starts with 100 health. When health drops below 50, a heart appears—collect it to restore health.
-- **Items:** Bombs spawn every 30 seconds. Avoid them!
+- **Items:** Bombs spawn every 30 seconds. Catch them to deal damage to bots depending on radius! Fire spawns every 30 seconds, deals damage to all bots on the map for a period of time!
 - **Game Over:** If health reaches zero, the game displays a message and waits for your input to restart or quit.
 
 ---
@@ -48,9 +48,10 @@ This project leverages the power of the [Fyrox](https://fyrox.rs/) game engine f
 #### **Build & Run**
 
 ```bash
-git clone https://github.com/your-username/your-2d-rust-game.git
-cd your-2d-rust-game
-cargo run
+git clone https://github.com/davide-perli/Nysodi.git
+cd Nysodi
+cd nysodi
+cargo run --package editor --release
 ```
 
 ---
@@ -58,13 +59,13 @@ cargo run
 ### 📁 Project Structure
 
 - `src/`
-  - `main.rs` – Game entry point and plugin setup
   - `bot.rs` – Enemy bot logic
-  - `player.rs` – Player movement, health, and item logic
+  - `player.rs` – Game entry point and plugin setup, player movement, health, and item logic
 - `assets/`
   - `scene.rgs` – Game scene resource
   - `heart.png` – Heart item sprite
   - `bomb.png` – Bomb item sprite
+  - `fire.png` - Fire item sprite
 
 ---
 
@@ -83,8 +84,3 @@ fn on_update(&mut self, context: &mut ScriptContext) {
     if self.health  _“Built with Rust, powered by passion.”_
 
 ---
-
-[1]: paste.txt
-
-[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/44406737/923017d3-95dc-4806-9853-a998cce0d7d7/paste.txt
-[2] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/44406737/58c7ff58-9649-4b27-9cad-2c049a15db1c/paste-2.txt
