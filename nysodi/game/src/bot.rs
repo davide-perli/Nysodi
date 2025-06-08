@@ -61,8 +61,8 @@ pub struct Bot {
     respawn_timer: Option<f32>,
     pending_health_update: Option<f32>,
 
-    reaction_timer: f32,
-    reaction_state: ReactionState,
+    pub reaction_timer: f32,
+    pub reaction_state: ReactionState,
     reaction_cooldown: f32,
     //has_reacted: bool,
     // ANCHOR_END: animation_fields
@@ -72,7 +72,7 @@ pub struct Bot {
 }
 
 #[derive(Visit, Reflect, Debug, Clone, Copy)]
-enum ReactionState {
+pub enum ReactionState {
     Motionless,
     RunningAway,
 }

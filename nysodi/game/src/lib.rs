@@ -1,6 +1,6 @@
 //! Game project.
 
-mod bot;
+pub mod bot;
         
 // ANCHOR: imports
 use crate::bot::Bot;
@@ -48,7 +48,7 @@ const MIN_DISTANCE_FROM_PLAYER: f32 = 5.0;   // never spawn closer than 5 units
 const MAX_DISTANCE_FROM_PLAYER: f32 = 11.0;  // clamp max radius if you like
 const MIN_SEPARATION: f32 = 4.0;             // bomb & fire at least 4 units apart
 
-fn random_point_around(
+pub fn random_point_around(
     center: Vector2<f32>,
     min_r: f32,
     max_r: f32,
@@ -76,8 +76,8 @@ fn random_point_around(
 
 #[derive(Visit, Reflect, Debug, Default)]
 pub struct Game {
-    scene: Handle<Scene>,
-    player: Handle<Node>,
+    pub scene: Handle<Scene>,
+    pub player: Handle<Node>,
     pub total_score: f32,
     pub bot_kill_count: u32, // Thanks to the Default flag, this will be initialized to 0, without needing to have impl Default for Game
     #[visit(optional)] #[reflect(hidden)]
@@ -148,7 +148,7 @@ impl Plugin for Game {
 #[derive(Visit, Reflect, Debug, Clone, TypeUuidProvider, ComponentProvider)]
 #[type_uuid(id = "c5671d19-9f1a-4286-8486-add4ebaadaec")]
 #[visit(optional)]
-struct Player {
+pub struct Player {
     sprite: Handle<Node>,
     move_left: bool,
     move_right: bool,
@@ -159,7 +159,7 @@ struct Player {
     animations: Vec<SpriteSheetAnimation>,
     current_animation: u32,
 
-    health: f32,
+    pub health: f32,
     max_health: f32,
     health_fill_handle: Handle<Node>,
 
@@ -208,7 +208,7 @@ impl Default for Player {
 impl Player {
 
     /// Spawn bomb at explicit `pos`
-    fn spawn_item(
+    pub fn spawn_item(
         &self,
         context: &mut ScriptContext,
         pos: Vector2<f32>
@@ -235,7 +235,7 @@ impl Player {
     }
 
     /// Spawn fire at explicit `pos`
-    fn spawn_fire(
+    pub fn spawn_fire(
         &self,
         context: &mut ScriptContext,
         pos: Vector2<f32>
@@ -262,7 +262,7 @@ impl Player {
     }
 
 
-    fn spawn_heart(&self, context: &mut ScriptContext) -> Handle<Node> {
+    pub fn spawn_heart(&self, context: &mut ScriptContext) -> Handle<Node> {
         let player_position = context.scene.graph[self.sprite]
             .global_position()
             .xy();

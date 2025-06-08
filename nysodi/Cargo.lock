@@ -934,22 +934,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "executor-android"
-version = "0.1.0"
-dependencies = [
- "fyrox",
- "nysodi",
-]
-
-[[package]]
-name = "executor-wasm"
-version = "0.1.0"
-dependencies = [
- "fyrox",
- "nysodi",
-]
-
-[[package]]
 name = "exr"
 version = "1.73.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1453,13 +1437,6 @@ dependencies = [
  "strum_macros",
  "toml",
  "toml_edit",
-]
-
-[[package]]
-name = "game_dylib"
-version = "0.1.0"
-dependencies = [
- "nysodi",
 ]
 
 [[package]]
