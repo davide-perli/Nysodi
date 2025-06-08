@@ -86,6 +86,87 @@ fn on_update(&mut self, context: &mut ScriptContext) {
 
 ---
 
+Here are two Mermaid.js diagrams ready for your README, styled for clarity and compatibility with GitHub and other Markdown renderers:
+
+---
+
+## 🧩 Entity Relationship Diagram
+
+```mermaid
+classDiagram
+    Player "1" -- "many" Bot : defeats
+    Player "1" -- "many" Heart : collects
+    Player "1" -- "many" Bomb : gets
+    Player "1" -- "many" Fire : gets
+    Bomb "many" -- "many" Bot : damages
+    Fire "1" -- "many" Bot : damages
+
+    class Player {
+        +health: f32
+        +max_health: f32
+        +spawn_heart()
+        +spawn_item()
+    }
+    class Bot
+    class Heart
+    class Bomb
+    class Fire
+```
+
+---
+
+## 🏗️ Main Class Structure
+
+```mermaid
+classDiagram
+    class Game {
+        -scene: Handle
+        -player: Handle
+        +total_score: f32
+        +bot_kill_count: u32
+        -bot_spawn_timer: f32
+        -bot_proto: Handle
+        +register()
+        +init()
+        +on_scene_loaded()
+        +update()
+    }
+
+    class Player {
+        -sprite: Handle
+        -move_left: bool
+        -move_right: bool
+        -move_up: bool
+        -move_down: bool
+        -game_over: bool
+        -animations: Vec
+        -current_animation: u32
+        -health: f32
+        -max_health: f32
+        -health_fill_handle: Handle
+        -initial_position: Vector2
+        -item_timer: Option
+        -bomb_timer: f32
+        -last_health: f32
+        -heart_pulse_timer: f32
+        -explosion_timer: Option
+        +has_printed_game_over: bool
+        +spawn_heart()
+        +spawn_item()
+        +update_health_bar()
+        +on_start()
+        +on_os_event()
+        +on_update()
+    }
+
+    class Bot
+
+    Game "1" -- "1" Player : manages
+    Game "1" -- "many" Bot : spawns
+```
+
+---
+
 ## 🗺️ Architecture Overview
 
 ```mermaid
