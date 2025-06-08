@@ -86,6 +86,94 @@ fn on_update(&mut self, context: &mut ScriptContext) {
 
 ---
 
+## 🗺️ Architecture Overview
+
+```mermaid
+flowchart TB
+    %% Tooling Layer
+    subgraph "Editor (Tooling)"
+        Editor["Editor App"]:::tool
+    end
+
+    %% Asset Repository
+    subgraph "Asset Repository"
+        Data["Asset Repo (data/)"]:::asset
+    end
+
+    %% Runtime Executors
+    subgraph "Runtime Executors"
+        Desktop["Desktop Executor"]:::runtime
+        Android["Android Executor"]:::runtime
+        WASM["WASM Executor"]:::runtime
+    end
+
+    %% Engine and Logic
+    subgraph "Engine & Logic"
+        Engine["Fyrox Engine Core"]:::engine
+        Plugin["Game Logic Plugin"]:::plugin
+        Core["Core Game Library"]:::plugin
+    end
+
+    %% Configuration
+    subgraph "Configuration"
+        Config["settings.ron / logs"]:::asset
+    end
+
+    %% Data Flows
+    Editor -->|"reads/writes"| Data
+    Editor -->|"export scene.rgs"| Data
+
+    Data -->|"load assets"| Desktop
+    Data -->|"load assets"| Android
+    Data -->|"load assets"| WASM
+
+    Desktop -->|"loads Engine & Plugin"| Engine
+    Android -->|"loads Engine & Plugin"| Engine
+    WASM -->|"loads Engine & Plugin"| Engine
+
+    Engine -->|"register plugin"| Plugin
+    Plugin -->|"uses Core logic"| Core
+
+    Desktop -->|"user input →"| Engine
+    Engine -->|"input events →"| Plugin
+    Plugin -->|"logic calls →"| Engine
+    Engine -->|"render calls →"| Desktop
+
+    Desktop -->|"reads"| Config
+    Android -->|"reads"| Config
+    WASM -->|"reads"| Config
+
+    %% Click Events
+    click Editor "https://github.com/davide-perli/nysodi/blob/main/nysodi/editor/src/main.rs"
+    click Core "https://github.com/davide-perli/nysodi/blob/main/nysodi/game/src/lib.rs"
+    click Plugin "https://github.com/davide-perli/nysodi/blob/main/nysodi/game-dylib/src/lib.rs"
+    click Desktop "https://github.com/davide-perli/nysodi/blob/main/nysodi/executor/src/main.rs"
+    click Android "https://github.com/davide-perli/nysodi/blob/main/nysodi/executor-android/src/lib.rs"
+    click WASM "https://github.com/davide-perli/nysodi/blob/main/nysodi/executor-wasm/src/lib.rs"
+    click Data "https://github.com/davide-perli/nysodi/tree/main/nysodi/data/"
+    click Config "https://github.com/davide-perli/nysodi/blob/main/nysodi/settings.ron"
+
+    %% Styles
+    classDef tool fill:#a2fca2,stroke:#333,stroke-width:1px
+    classDef asset fill:#d3d3d3,stroke:#333,stroke-width:1px
+    classDef runtime fill:#f9e79f,stroke:#333,stroke-width:1px
+    classDef engine fill:#85c1e9,stroke:#333,stroke-width:1px
+    classDef plugin fill:#f5b041,stroke:#333,stroke-width:1px
+```
+
+---
+
+**Tips:**
+- On GitHub, Mermaid diagrams are supported in Markdown files (as of 2024).
+- If your platform does not render Mermaid, you can use [Mermaid Live Editor](https://mermaid.live/) to generate a PNG/SVG and embed that as an image.
+
+Let me know if you want a brief description or legend for each component!
+
+[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/44406737/923017d3-95dc-4806-9853-a998cce0d7d7/paste.txt
+[2] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/44406737/58c7ff58-9649-4b27-9cad-2c049a15db1c/paste-2.txt
+
+---
+
 ## ⚠️ License
 
 This project is free for personal and non-commercial use.
