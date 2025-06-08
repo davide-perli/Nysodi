@@ -79,6 +79,14 @@ cargo run --package editor --release
 
 ---
 
+## 🧪 Game Demo
+
+Click below to view game demo!
+
+🎮 **[View the Demo](https://davide-perli.github.io/Nysodi)**
+
+---
+
 ### ⚡ Example Code Snippet
 
 ```rust
@@ -250,17 +258,6 @@ flowchart LR
     class AssetStore assets;
     class Browser,AndroidOS platform;
 ```
-
----
-
-**Tips:**
-- On GitHub, Mermaid diagrams are supported in Markdown files (as of 2024).
-- If your platform does not render Mermaid, you can use [Mermaid Live Editor](https://mermaid.live/) to generate a PNG/SVG and embed that as an image.
-
-Let me know if you want a brief description or legend for each component!
-
-[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/44406737/923017d3-95dc-4806-9853-a998cce0d7d7/paste.txt
-[2] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/44406737/58c7ff58-9649-4b27-9cad-2c049a15db1c/paste-2.txt
 
 ---
 
