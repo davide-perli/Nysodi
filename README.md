@@ -96,8 +96,8 @@ Here are two Mermaid.js diagrams ready for your README, styled for clarity and c
 classDiagram
     Player "1" -- "many" Bot : defeats
     Player "1" -- "many" Heart : collects
-    Player "1" -- "many" Bomb : gets
-    Player "1" -- "many" Fire : gets
+    Player "1" -- "many" Bomb : uses
+    Player "1" -- "many" Fire : uses
     Bomb "many" -- "many" Bot : damages
     Fire "1" -- "many" Bot : damages
 
