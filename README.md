@@ -83,9 +83,23 @@ fn on_update(&mut self, context: &mut ScriptContext) {
 
     if self.health  _“Built with Rust, powered by passion.”_
 
+---
 
-### :handshake: Contact
+Absolutely! Here’s a much cleaner and visually appealing Contact section for your README.  
+This version uses Markdown formatting for clarity, spacing, and a professional look:
 
-Perli Davide and Andra Alexandrescu - - perlidavide@gmail.com    alexandrecuandra2005@gmail.com
+---
 
-Project Link: [https://github.com/davide-perli/Nysodi](https://github.com/davide-perli/Nysodi)
+### 🤝 Contact
+
+**Perli Davide**  
+📧 [perlidavide@gmail.com](mailto:perlidavide@gmail.com)
+
+**Andra Alexandrescu**  
+📧 [alexandrecuandra2005@gmail.com](mailto:alexandrecuandra2005@gmail.com)
+
+**Project Link:**  
+🔗 [github.com/davide-perli/Nysodi](https://github.com/davide-perli/Nysodi)
+
+---
+
