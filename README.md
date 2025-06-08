@@ -170,76 +170,59 @@ classDiagram
 ## 🗺️ Architecture Overview
 
 ```mermaid
-flowchart TB
-    %% Tooling Layer
-    subgraph "Editor (Tooling)"
-        Editor["Editor App"]:::tool
+flowchart TD
+    subgraph "Development & Editor"
+        EditorApp["Editor App"]:::engine
     end
 
-    %% Asset Repository
-    subgraph "Asset Repository"
-        Data["Asset Repo (data/)"]:::asset
+    subgraph "Runtimes"
+        ExecutorDesktop["Executor-Desktop"]:::engine
+        ExecutorWASM["Executor-WASM"]:::engine
+        ExecutorAndroid["Executor-Android"]:::engine
     end
 
-    %% Runtime Executors
-    subgraph "Runtime Executors"
-        Desktop["Desktop Executor"]:::runtime
-        Android["Android Executor"]:::runtime
-        WASM["WASM Executor"]:::runtime
+    FyroxEngine["Fyrox Engine"]:::engine
+    AssetStore["Asset Store (nysodi/data/)"]:::assets
+    GameLogicPlugin["Game Logic Plugin (cdylib)"]:::game
+    CoreGame["Core Game Logic (game crate)"]:::game
+
+    subgraph "Platform Hosts"
+        Browser["Browser Host"]:::platform
+        AndroidOS["Android OS Host"]:::platform
     end
 
-    %% Engine and Logic
-    subgraph "Engine & Logic"
-        Engine["Fyrox Engine Core"]:::engine
-        Plugin["Game Logic Plugin"]:::plugin
-        Core["Core Game Library"]:::plugin
-    end
+    EditorApp -->|"calls rendering/input"| FyroxEngine
+    ExecutorDesktop -->|"calls rendering/input"| FyroxEngine
+    ExecutorWASM -->|"calls rendering/input"| FyroxEngine
+    ExecutorAndroid -->|"calls rendering/input"| FyroxEngine
 
-    %% Configuration
-    subgraph "Configuration"
-        Config["settings.ron / logs"]:::asset
-    end
+    EditorApp -->|"load_scene(), load_assets"| AssetStore
+    ExecutorDesktop -->|"load_scene(), load_assets"| AssetStore
+    ExecutorWASM -->|"load_scene(), load_assets"| AssetStore
+    ExecutorAndroid -->|"load_scene(), load_assets"| AssetStore
 
-    %% Data Flows
-    Editor -->|"reads/writes"| Data
-    Editor -->|"export scene.rgs"| Data
+    EditorApp -->|"load_plugin()"| GameLogicPlugin
+    ExecutorDesktop -->|"load_plugin()"| GameLogicPlugin
+    ExecutorWASM -->|"load_plugin()"| GameLogicPlugin
+    ExecutorAndroid -->|"load_plugin()"| GameLogicPlugin
 
-    Data -->|"load assets"| Desktop
-    Data -->|"load assets"| Android
-    Data -->|"load assets"| WASM
+    GameLogicPlugin -->|"invoke_on_init(), on_update()"| CoreGame
 
-    Desktop -->|"loads Engine & Plugin"| Engine
-    Android -->|"loads Engine & Plugin"| Engine
-    WASM -->|"loads Engine & Plugin"| Engine
+    ExecutorWASM -->|"WebGL, JS glue (main.js)"| Browser
+    ExecutorAndroid -->|"JNI bridge"| AndroidOS
 
-    Engine -->|"register plugin"| Plugin
-    Plugin -->|"uses Core logic"| Core
+    click EditorApp "https://github.com/davide-perli/nysodi/tree/main/nysodi/editor/"
+    click ExecutorDesktop "https://github.com/davide-perli/nysodi/tree/main/nysodi/executor/"
+    click ExecutorWASM "https://github.com/davide-perli/nysodi/tree/main/nysodi/executor-wasm/"
+    click ExecutorAndroid "https://github.com/davide-perli/nysodi/tree/main/nysodi/executor-android/"
+    click GameLogicPlugin "https://github.com/davide-perli/nysodi/tree/main/nysodi/game-dylib/"
+    click CoreGame "https://github.com/davide-perli/nysodi/tree/main/nysodi/game/"
+    click AssetStore "https://github.com/davide-perli/nysodi/tree/main/nysodi/data/"
 
-    Desktop -->|"user input →"| Engine
-    Engine -->|"input events →"| Plugin
-    Plugin -->|"logic calls →"| Engine
-    Engine -->|"render calls →"| Desktop
-
-    Desktop -->|"reads"| Config
-    Android -->|"reads"| Config
-    WASM -->|"reads"| Config
-
-    %% Click Events
-    click Editor "https://github.com/davide-perli/nysodi/blob/main/nysodi/editor/src/main.rs"
-    click Core "https://github.com/davide-perli/nysodi/blob/main/nysodi/game/src/lib.rs"
-    click Plugin "https://github.com/davide-perli/nysodi/blob/main/nysodi/game-dylib/src/lib.rs"
-    click Desktop "https://github.com/davide-perli/nysodi/blob/main/nysodi/executor/src/main.rs"
-    click Android "https://github.com/davide-perli/nysodi/blob/main/nysodi/executor-android/src/lib.rs"
-    click WASM "https://github.com/davide-perli/nysodi/blob/main/nysodi/executor-wasm/src/lib.rs"
-    click Data "https://github.com/davide-perli/nysodi/tree/main/nysodi/data/"
-    click Config "https://github.com/davide-perli/nysodi/blob/main/nysodi/settings.ron"
-
-    %% Styles
-    classDef tool fill:#a2fca2,stroke:#333,stroke-width:1px
-    classDef asset fill:#d3d3d3,stroke:#333,stroke-width:1px
-    classDef runtime fill:#f9e79f,stroke:#333,stroke-width:1px
-    classDef engine fill:#85c1e9,stroke:#333,stroke-width:1px
-    classDef plugin fill:#f5b041,stroke:#333,stroke-width:1px
+    classDef engine fill:#cce5ff,stroke:#004085
+    classDef game fill:#d4edda,stroke:#155724
+    classDef assets fill:#fff3cd,stroke:#856404
+    classDef platform fill:#e2dfff,stroke:#4b0082
 ```
 
 ---
