@@ -96,12 +96,6 @@ fn on_update(&mut self, context: &mut ScriptContext) {
     if self.health  _“Built with Rust, powered by passion.”_
 ```
 
----
-
-Here are two Mermaid.js diagrams ready for your README, styled for clarity and compatibility with GitHub and other Markdown renderers:
-
----
-
 ## 🧩 Entity Relationship Diagram
 
 ```mermaid
@@ -258,6 +252,21 @@ flowchart LR
     class AssetStore assets;
     class Browser,AndroidOS platform;
 ```
+## User stories and acceptance criteria
+
+### SCRUM-1 User walks around a map  
+
+### Description
+
+As a player I can walk around a map in all directions, being bounded by some limits that have collisions enabled.  
+
+### Acceptance criteria  
+- The player can move the character up, down, left, and right using input controls.  
+- The character stops moving when colliding with obstacles.  
+- The character cannot move outside the defined map boundaries.
+
+### Implementation details
+The border is formed out of CenterTiles which contain Collider 2D items, initially also including 2D Rectangle Sprites, which were later removed after the SCRUM in which the map was designed, in order for the player to still be limited to a certain area with colliders made invisible.
 
 ---
 
