@@ -489,6 +489,764 @@
         ),
     ),
     scene_settings: {
+        "data/scene.rgs": (
+            camera_settings: (
+                position: (0.6955347, -2.0921671, -3.0),
+                yaw: 6.980006,
+                pitch: 1.5707964,
+                projection: Orthographic((
+                    z_near: 0.025,
+                    z_far: 128.0,
+                    vertical_size: 5.0,
+                )),
+            ),
+            node_infos: {
+                (
+                    index: 112,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 154,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 247,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 30,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 277,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 253,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 276,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 127,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 232,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 286,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 76,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 377,
+                    generation: 1,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 24,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 18,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 51,
+                    generation: 1,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 79,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 85,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 193,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 307,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 124,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 265,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 48,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 39,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 333,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 10,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 201,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 199,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 217,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 202,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 190,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 151,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 289,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 160,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 298,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 148,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 5,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 142,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 380,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 375,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 118,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 54,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 301,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 45,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 241,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 42,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 163,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 91,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 280,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 166,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 181,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 15,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 175,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 332,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 97,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 61,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 2,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 8,
+                    generation: 1,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 130,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 229,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 115,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 220,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 27,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 100,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 244,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 214,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 208,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 4,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 327,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 184,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 121,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 238,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 262,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 205,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 292,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 64,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 67,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 106,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 328,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 256,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 379,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 103,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 21,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 226,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 133,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 14,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 283,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 12,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 139,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 70,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 73,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 60,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 82,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 204,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 295,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 211,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 7,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 94,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 271,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 268,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 59,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 145,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 0,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 136,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 3,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 6,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 169,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 235,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 274,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 16,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 109,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 57,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 250,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 36,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 88,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 259,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 1,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 33,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 223,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 196,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 172,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 178,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 157,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+                (
+                    index: 376,
+                    generation: 1,
+                ): (
+                    is_expanded: false,
+                ),
+                (
+                    index: 187,
+                    generation: 1,
+                ): (
+                    is_expanded: true,
+                ),
+            },
+        ),
         "data/characters/skeleton.rgs": (
             camera_settings: (
                 position: (0.0, 0.12900001, 0.0),
@@ -521,758 +1279,6 @@
                 ),
             },
         ),
-        "data/scene.rgs": (
-            camera_settings: (
-                position: (0.5804669, 5.7664814, -3.0),
-                yaw: 6.980006,
-                pitch: 1.5707964,
-                projection: Orthographic((
-                    z_near: 0.025,
-                    z_far: 128.0,
-                    vertical_size: 13.4627905,
-                )),
-            ),
-            node_infos: {
-                (
-                    index: 247,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 184,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 229,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 60,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 172,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 3,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 2,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 375,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 160,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 112,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 67,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 190,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 196,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 307,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 27,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 253,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 376,
-                    generation: 1,
-                ): (
-                    is_expanded: false,
-                ),
-                (
-                    index: 94,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 21,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 82,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 24,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 181,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 124,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 54,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 223,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 241,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 157,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 148,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 283,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 39,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 380,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 42,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 100,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 166,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 64,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 327,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 12,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 169,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 286,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 274,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 7,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 333,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 97,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 118,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 76,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 163,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 73,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 145,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 199,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 88,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 271,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 30,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 295,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 238,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 232,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 178,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 277,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 5,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 244,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 298,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 226,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 208,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 51,
-                    generation: 1,
-                ): (
-                    is_expanded: false,
-                ),
-                (
-                    index: 250,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 133,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 70,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 379,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 0,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 15,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 127,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 201,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 265,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 220,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 10,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 276,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 6,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 16,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 121,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 18,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 193,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 217,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 103,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 256,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 1,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 79,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 328,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 139,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 187,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 4,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 57,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 61,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 268,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 142,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 85,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 48,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 280,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 204,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 214,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 259,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 211,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 175,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 292,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 154,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 301,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 136,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 115,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 377,
-                    generation: 1,
-                ): (
-                    is_expanded: false,
-                ),
-                (
-                    index: 235,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 91,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 289,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 45,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 205,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 262,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 14,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 151,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 59,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 202,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 109,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 106,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 33,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 130,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 332,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-                (
-                    index: 36,
-                    generation: 1,
-                ): (
-                    is_expanded: true,
-                ),
-            },
-        ),
     },
     recent: (
         scenes: [
@@ -1281,8 +1287,8 @@
         ],
     ),
     windows: (
-        window_position: (-9.0, -9.0),
-        window_size: (1920.0, 991.0),
+        window_position: (1.0, 0.0),
+        window_size: (1900.0, 951.0),
         window_maximized: false,
         layout: None,
     ),
