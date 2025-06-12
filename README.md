@@ -83,7 +83,7 @@ cargo run --package editor --release
 
 Click below to view game demo!
 
-🎮 **[View the Demo](https://davide-perli.github.io/Nysodi)**
+🎮 **[View the Demo](https://youtu.be/tj5efI2Rw-w)**
 
 ---
 
