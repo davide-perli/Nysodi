@@ -613,7 +613,7 @@ Couldn't include other logic because of the fact that any test function requires
 - movement logic flawed for skeletons caused by sharing resources: solved by creating multiple skeletons in `scene.rgs`, each having different children nodes
 - HeartFill handle not updating properly: solved by addressing HeartFill and HeartBackground positioning issues
 - target sprites lagging the game because of setting their visibility to none and remaining as nodes in `scene.rgs` (since each enemy movement when the playyer attacked it created a new target sprite layered on top)
-- Davide working on the same code as me (Andra) for correcting enemies spawning with sharing the same resources forced me to merge changes from both of our contributions, solving a merge conflict caused by a detached head
+- Davide working on the same code as me (Andra) for correcting enemies spawning with sharing the same resources forced me to merge changes from both of our contributions, solving a merge conflict caused by a detached head (comments in the branch are relevant + **2 parents b74cd4a + aabf900 commit b56b427**)
 2. `SCRUM-3` branch was completely forgotten after working on other branches and merged before completely implementing the fire item spawning logic so we avoided merging it again and just added another commit to `main`
 ---
 
