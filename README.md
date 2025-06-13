@@ -601,8 +601,18 @@ This process consisted in creating a tileset and a tile map brush connected to i
 
 ## Automated tests
 Included in `src/tests`:
-  - `test_map_edges_clamping()`
-  - `test_bot_trigger_reaction()`
+  - `test_map_edges_clamping()`   - tests the boundaries of the map: The player can't surpass the map edges
+  - `test_bot_trigger_reaction()` - tests the bot reactions: The bot needs to react in one of two possible ways
+
+
+To run tests: 
+```bash
+git clone https://github.com/davide-perli/Nysodi.git
+cd Nysodi
+cd nysodi
+cd game
+cargo test -- --nocapture
+```
 
 ### Note
 Couldn't include other logic because of the fact that any test function requires no arguments, therefore the game context couldn't be retrived as a parameter in order to create another test function called `test_spawn_methods_place_items_in_bounds()`, meant to check bomb items, fire items and hearts. A possible solution was to create a minimal game context which is rather impossible by any means.
