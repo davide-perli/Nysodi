@@ -623,6 +623,8 @@ See `prompt-engineering.pdf`
 ---
 ## Coding standards
 
+[Rust Coding Standards](https://rustc-dev-guide.rust-lang.org/conventions.html)
+
 - Naming standards: Use of `snake_case` for variables and functions (`update_bots`, `target_item`, `spawn_bot`)
 - Use of `CamelCase` for types like structs and enums (`Bot`, `BotBehavior`)
 - Logical grouping of functionality
