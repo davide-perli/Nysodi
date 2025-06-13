@@ -613,12 +613,45 @@ Couldn't include other logic because of the fact that any test function requires
 - movement logic flawed for skeletons caused by sharing resources: solved by creating multiple skeletons in `scene.rgs`, each having different children nodes
 - HeartFill handle not updating properly: solved by addressing HeartFill and HeartBackground positioning issues
 - target sprites lagging the game because of setting their visibility to none and remaining as nodes in `scene.rgs` (since each enemy movement when the playyer attacked it created a new target sprite layered on top)
-- Davide working on the same code as me (Andra) for correcting enemies spawning with sharing the same resources forced me to merge changes from both of our contributions
+- Davide working on the same code as me (Andra) for correcting enemies spawning with sharing the same resources forced me to merge changes from both of our contributions, solving a merge conflict caused by a detached head
 2. `SCRUM-3` branch was completely forgotten after working on other branches and merged before completely implementing the fire item spawning logic so we avoided merging it again and just added another commit to `main`
 ---
 
 ## Prompt engineering
 See `prompt-engineering.pdf`
+
+---
+## Coding standards
+
+- Naming standards: Use of `snake_case` for variables and functions (`update_bots`, `target_item`, `spawn_bot`)
+- Use of `CamelCase` for types like structs and enums (`Bot`, `BotBehavior`)
+- Logical grouping of functionality
+- Use of `Option`, `Vec`, and `Rc` appropriately
+- Generally idiomatic use of `match`, `if let`, and pattern matching
+  - `match` usage: Direct and readable enum matching that avoid redundant patterns
+  ```rust
+  match self.reaction_state {
+      ReactionState::Motionless => {
+          ...
+      }
+      ReactionState::RunningAway => {
+          ...
+      }
+  }
+  ```
+
+  - `if let` usage: `if let` simplifies handling `Option` values when only the `Some` case matters, reducing nesting
+  ```rust
+  if let Some(target_item) = bot.target_item {
+      ...
+  }
+  ```
+
+  ```rust
+  if let Some(rectangle) = context.scene.graph.try_get_mut(heart).and_then(|n| n.cast_mut::<Rectangle>()) {
+      ...
+  }
+  ```
 
 ---
 
@@ -628,6 +661,26 @@ This project is free for personal and non-commercial use.
 If you wish to use this project or its code for commercial purposes, you must obtain a commercial license.
 
 See License.txt for full details.
+
+---
+
+## ⚠️ Acknowledgments
+
+Code contribution:
+
+[Character Controller Tutorial](https://fyrox-book.github.io/tutorials/platformer/part1.html)
+
+[Bots and AI Tutorial](https://fyrox-book.github.io/tutorials/platformer/part2.html)
+
+[Tilemap Tutorial](https://fyrox-book.github.io/scene/tilemap.html)
+
+Assets contribution:
+
+[Heart Item Asset](https://redreeh.itch.io/pixelhearts-16x16)
+
+[Fire and Bomb Assets](https://craftpix.net/freebies/free-slime-mobs-pixel-art-top-down-sprite-pack/)
+
+[Undead Tileset Pixel Art](https://craftpix.net/freebies/free-undead-tileset-top-down-pixel-art/)
 
 ---
 
@@ -643,4 +696,3 @@ See License.txt for full details.
 🔗 [github.com/davide-perli/Nysodi](https://github.com/davide-perli/Nysodi)
 
 ---
-
